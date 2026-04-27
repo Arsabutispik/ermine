@@ -1,4 +1,8 @@
 ﻿{
-  "packages": { ".": { "initial-version": "0.1.0" } },
-  "release-type": "simple"
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "initial-version": "0.1.0"
+    }
+  }
 }
