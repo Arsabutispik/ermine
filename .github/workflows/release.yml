@@ -20,7 +20,7 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Publish
-        run: dotnet publish Ermine/Ermine.csproj -r ${{ matrix.rid }} -c Release --self-contained -o out/${{ matrix.rid }}
+        run: dotnet publish Ermine.csproj -r ${{ matrix.rid }} -c Release --self-contained -o out/${{ matrix.rid }}
 
       - name: Zip artifacts
         run: zip -r ermine-${{ matrix.rid }}.zip out/${{ matrix.rid }}
