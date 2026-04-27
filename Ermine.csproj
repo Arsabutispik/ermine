@@ -28,6 +28,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include=".github\" />
+      <Content Include=".github\workflows\release.yml" />
     </ItemGroup>
 </Project>
