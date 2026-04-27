@@ -1,10 +1,4 @@
 ﻿{
-  "release-type": "simple",
-  "separate-pull-requests": true,
-  "packages": {
-    ".": {
-      "release-type": "simple",
-      "initial-version": "0.1.0"
-    }
-  }
+  "packages": { ".": { "initial-version": "0.1.0" } },
+  "release-type": "simple"
 }
