@@ -1,0 +1,452 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Ermine.ViewModels"
+             xmlns:models="using:Ermine.Models"
+             xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:converters="clr-namespace:Ermine.Converters"
+             x:Class="Ermine.Views.MainChatView"
+             x:DataType="vm:MainChatViewModel">
+    
+    <UserControl.Resources>
+        <converters:ChannelSelectionConverter x:Key="ChannelSelectionConverter"/>
+    </UserControl.Resources>
+
+    <Grid ColumnDefinitions="60, 240, *">
+
+        <Border Grid.Column="0" Background="#000000">
+            <Grid RowDefinitions="Auto, *, Auto">
+
+                <StackPanel Grid.Row="0" Margin="0,10,0,0">
+                    <Border Width="48" Height="48"
+                            ClipToBounds="True"
+                            CornerRadius="24"
+                            Background="#2a233a"
+                            ToolTip.Tip="{Binding CurrentUser.DisplayName,  StringFormat='@ {0}'}"
+                            ToolTip.Placement="Right"
+                            ToolTip.VerticalOffset="0"
+                            ToolTip.HorizontalOffset="3"
+                            Cursor="Hand">
+                        <Border.Styles>
+                            <Style Selector="Border">
+                                <Setter Property="Transitions">
+                                    <Transitions>
+                                        <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.2" />
+                                    </Transitions>
+                                </Setter>
+                            </Style>
+                            <Style Selector="Border:pointerover">
+                                <Setter Property="CornerRadius" Value="16" />
+                            </Style>
+                        </Border.Styles>
+                        <Image asyncImageLoader:ImageLoader.Source="{Binding CurrentUser.AvatarUrl}"
+                               Stretch="UniformToFill" />
+                    </Border>
+                    
+                    <Border Height="2" Width="32" Background="#003e49" Margin="0,8,0,0" CornerRadius="1"/>
+                </StackPanel>
+
+                <ScrollViewer Grid.Row="1">
+                    <ListBox ItemsSource="{Binding Servers}"
+                             SelectedItem="{Binding SelectedServer}"
+                             Background="Transparent"
+                             Padding="0,10">
+                        <ListBox.Styles>
+                            <Style Selector="ListBoxItem">
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,4" />
+                                <Setter Property="Template">
+                                    <ControlTemplate>
+                                        <Grid Name="RootGrid" ColumnDefinitions="4, *">
+            
+                                            <Rectangle Name="Indicator"
+                                                       Grid.Column="0"
+                                                       Width="4"
+                                                       Fill="#00ffd8"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Left"
+                                                       Height="0" 
+                                                       Opacity="0"
+                                                       RadiusX="2" RadiusY="2" />
+
+                                            <ContentPresenter Name="PART_ContentPresenter"
+                                                              Grid.Column="1"
+                                                              Background="Transparent"
+                                                              Content="{TemplateBinding Content}"
+                                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                              HorizontalAlignment="Left"
+                                                              VerticalAlignment="Center"
+                                                              Margin="2,0,0,0" /> 
+                                        </Grid>
+                                    </ControlTemplate>
+                                </Setter>
+                            </Style>
+
+                            <Style Selector="ListBoxItem:pointerover Rectangle#Indicator">
+                                <Setter Property="Opacity" Value="0.5" />
+                                <Setter Property="Height" Value="20" />
+                            </Style>
+
+                            <Style Selector="ListBoxItem:selected Rectangle#Indicator">
+                                <Setter Property="Opacity" Value="1" />
+                                <Setter Property="Height" Value="40" />
+                            </Style>
+
+                            <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="Transparent" />
+                            </Style>
+                            <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="Transparent" />
+                            </Style>
+
+                            <Style Selector="Rectangle#Indicator">
+                                <Setter Property="Transitions">
+                                    <Transitions>
+                                        <DoubleTransition Property="Height" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                                        <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+                                    </Transitions>
+                                </Setter>
+                            </Style>
+
+                        </ListBox.Styles>
+
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Width="48" Height="48"
+                                        ClipToBounds="True"
+                                        CornerRadius="24"
+                                        Background="#2a233a"
+                                        ToolTip.Tip="{Binding Name}"
+                                        ToolTip.Placement="Right"
+                                        ToolTip.VerticalOffset="0"
+                                        ToolTip.HorizontalOffset="3">
+                                    <Image asyncImageLoader:ImageLoader.Source="{Binding IconUrl}"
+                                           Stretch="UniformToFill" />
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+
+                    </ListBox>
+                </ScrollViewer>
+
+                <Button Grid.Row="2"
+                        Content="Logout"
+                        Command="{Binding LogoutCommand}"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Margin="10"
+                        Background="#003e49"
+                        Foreground="#ffffff" />
+
+            </Grid>
+        </Border>
+
+        <Border Grid.Column="1" Background="#2a233a" 
+                BorderBrush="#003e49" BorderThickness="0,0,1,0"
+                IsVisible="{Binding SelectedServer, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Grid RowDefinitions="120, *">
+                
+                <Border Grid.Row="0" BorderBrush="#003e49" BorderThickness="0,0,0,1">
+                    <Panel>
+                        <Image asyncImageLoader:ImageLoader.Source="{Binding SelectedServer.BannerUrl}"
+                               Stretch="UniformToFill" />
+
+                        <Border>
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                    <GradientStop Color="#002a233a" Offset="0.0" />
+                                    <GradientStop Color="#aa2a233a" Offset="0.6" />
+                                    <GradientStop Color="#ff2a233a" Offset="1.0" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+
+                        <TextBlock Text="{Binding SelectedServer.Name}"
+                                   FontWeight="Bold"
+                                   FontSize="16"
+                                   Foreground="#ffffff"
+                                   Margin="16,0,16,12"
+                                   VerticalAlignment="Bottom"
+                                   HorizontalAlignment="Left" />
+                    </Panel>
+                </Border>
+                
+                <ScrollViewer Grid.Row="1">
+                    <ScrollViewer.Styles>
+                        <Style Selector="RadioButton.ChannelItem">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Foreground" Value="#949BA4"/> <Setter Property="CornerRadius" Value="4"/>
+                            <Setter Property="Margin" Value="12,1,8,1"/> <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <ControlTemplate>
+                                    <Border Background="{TemplateBinding Background}"
+                                            CornerRadius="{TemplateBinding CornerRadius}">
+                                        <ContentPresenter Content="{TemplateBinding Content}"
+                                                          Margin="8,6"
+                                                          VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter>
+                            <Setter Property="Transitions">
+                                <Transitions>
+                                    <BrushTransition Property="Background" Duration="0:0:0.1"/>
+                                    <BrushTransition Property="Foreground" Duration="0:0:0.1"/>
+                                </Transitions>
+                            </Setter>
+                        </Style>
+                        
+                        <Style Selector="RadioButton.ChannelItem:pointerover">
+                            <Setter Property="Foreground" Value="#ffffff"/>
+                            <Setter Property="Background" Value="#00493e"/>
+                        </Style>
+                        <Style Selector="RadioButton.ChannelItem:checked">
+                            <Setter Property="Foreground" Value="#00d8ff"/>
+                            <Setter Property="Background" Value="#003e49"/>
+                        </Style>
+                    </ScrollViewer.Styles>
+
+                    <ItemsControl ItemsSource="{Binding ServerChannelGroups}" Margin="0,12,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:ChannelGroup">
+                                <StackPanel Margin="0,0,0,12">
+                                    
+                                    <ToggleButton IsChecked="{Binding IsExpanded}"
+                                                  IsVisible="{Binding IsCategory}"
+                                                  Background="Transparent"
+                                                  Padding="8,6"
+                                                  Margin="8,0"
+                                                  HorizontalAlignment="Stretch"
+                                                  HorizontalContentAlignment="Stretch"
+                                                  Cursor="Hand">
+                                        <ToggleButton.Styles>
+                                            <Style Selector="ToggleButton">
+                                                <Setter Property="Template">
+                                                    <ControlTemplate>
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                
+                                                                <TextBlock Text="{Binding CategoryName}"
+                                                                           FontWeight="ExtraBold"
+                                                                           FontSize="12"
+                                                                           Foreground="#d1d5db"
+                                                                           VerticalAlignment="Center"/>
+
+                                                                <Path Data="M 0,0 L 4,4 L 0,8" 
+                                                                      Stroke="#d1d5db" 
+                                                                      StrokeThickness="2"
+                                                                      StrokeLineCap="Round"
+                                                                      StrokeJoin="Round"
+                                                                      Width="6" Height="10"
+                                                                      VerticalAlignment="Center"
+                                                                      Margin="8,0,0,0" 
+                                                                      RenderTransformOrigin="50%,50%">
+                                                                    <Path.Styles>
+                                                                        <Style Selector="Path">
+                                                                            <Setter Property="RenderTransform" Value="rotate(0deg)"/>
+                                                                            <Setter Property="Transitions">
+                                                                                <Transitions>
+                                                                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" Easing="CubicEaseOut"/>
+                                                                                    <BrushTransition Property="Stroke" Duration="0:0:0.15"/>
+                                                                                </Transitions>
+                                                                            </Setter>
+                                                                        </Style>
+                                                                        <Style Selector="ToggleButton:checked /template/ Path">
+                                                                            <Setter Property="RenderTransform" Value="rotate(90deg)"/>
+                                                                        </Style>
+                                                                    </Path.Styles>
+                                                                </Path>
+                                                                
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter>
+                                            </Style>
+                                            
+                                            <Style Selector="ToggleButton:pointerover /template/ TextBlock">
+                                                <Setter Property="Foreground" Value="#ffffff"/>
+                                            </Style>
+                                            <Style Selector="ToggleButton:pointerover /template/ Path">
+                                                <Setter Property="Stroke" Value="#ffffff"/>
+                                            </Style>
+                                        </ToggleButton.Styles>
+                                    </ToggleButton>
+                                    <ItemsControl ItemsSource="{Binding Channels}" 
+                                                  IsVisible="{Binding IsExpanded}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="models:Channel">
+                                                
+                                                <RadioButton Classes="ChannelItem"
+                                                             GroupName="ServerChannels"
+                                                             Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).SelectChannelCommand}"
+                                                             CommandParameter="{Binding}">
+    
+                                                    <RadioButton.IsChecked>
+                                                        <MultiBinding Converter="{StaticResource ChannelSelectionConverter}" Mode="OneWay">
+                                                            <Binding /> 
+                                                            <Binding Path="$parent[UserControl].((vm:MainChatViewModel)DataContext).SelectedChannel" />
+                                                        </MultiBinding>
+                                                    </RadioButton.IsChecked>
+
+                                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                        <TextBlock Text="#" VerticalAlignment="Center"/>
+
+                                                        <Border Width="18" Height="18"
+                                                                ClipToBounds="True"
+                                                                CornerRadius="4"
+                                                                IsVisible="{Binding IconUrl, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                            <Image asyncImageLoader:ImageLoader.Source="{Binding IconUrl}"
+                                                                   Stretch="UniformToFill" />
+                                                        </Border>
+
+                                                        <TextBlock Text="{Binding DisplayName}"
+                                                                   VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </RadioButton>
+                                                             
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                
+            </Grid>
+        </Border>
+
+        <Border Grid.Column="2" Background="#2a233a">
+            <Panel>
+                <TextBlock Text="Select a channel to start chatting..."
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Foreground="#00ffd8"
+                           Opacity="0.8"
+                           IsVisible="{Binding SelectedChannel, Converter={x:Static ObjectConverters.IsNull}}"/>
+
+                <Grid RowDefinitions="*, Auto" 
+                      IsVisible="{Binding SelectedChannel, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    
+                    <ListBox Grid.Row="0" 
+         Name="MessageList" 
+         ItemsSource="{Binding CurrentMessages}" 
+         Margin="0,0,0,10"
+         Padding="20,10"
+         Background="Transparent"
+         BorderThickness="0"
+         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+    
+    <ListBox.ItemsPanel>
+        <ItemsPanelTemplate>
+            <VirtualizingStackPanel VerticalAlignment="Bottom"/>
+        </ItemsPanelTemplate>
+    </ListBox.ItemsPanel>
+    
+    <ListBox.Styles>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <ContentPresenter Name="PART_ContentPresenter"
+                                      Background="{TemplateBinding Background}"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Padding="{TemplateBinding Padding}"
+                                      Margin="{TemplateBinding Margin}"/>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#05ffffff" />
+        </Style>
+    </ListBox.Styles>
+
+    <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="models:Message">
+            <Grid ColumnDefinitions="Auto, *" Margin="10,8,10,8">
+                <Border Grid.Column="0" Width="40" Height="40" 
+                        CornerRadius="20" ClipToBounds="True"
+                        VerticalAlignment="Top" Background="#003e49">
+                    <Image Source="{Binding Avatar}"
+                           Stretch="UniformToFill"
+                           RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                </Border>
+
+                <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding DisplayAuthorName}" 
+                                   FontWeight="Bold" 
+                                   Foreground="#ffffff" />
+                        <TextBlock Text="{Binding Edited, StringFormat='{}{0:g}'}" 
+                                   Foreground="#949BA4" 
+                                   FontSize="12" 
+                                   VerticalAlignment="Bottom"/>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding Content}" 
+                               Foreground="#d1d5db" 
+                               TextWrapping="Wrap" 
+                               Margin="0,4,0,0"
+                               IsVisible="{Binding Content, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                    <ItemsControl ItemsSource="{Binding Attachments}" Margin="0,8,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:Attachment">
+                                <Border CornerRadius="8"
+                                        ClipToBounds="True"
+                                        Margin="0,0,0,8"
+                                        HorizontalAlignment="Left"
+                                        IsVisible="{Binding IsImage}"
+                                        Width="{Binding DisplayWidth}"
+                                        Height="{Binding DisplayHeight}">
+                                    <Image asyncImageLoader:ImageLoader.Source="{Binding Url}"
+                                           Stretch="Uniform"
+                                           RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+    </ListBox.ItemTemplate>
+</ListBox>
+
+                    <Border Grid.Row="1" Background="#3b324d" CornerRadius="8" Margin="20,0,20,20" Padding="2">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding DraftMessage}"
+                                     PlaceholderText="Message #channel..."
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Foreground="#ffffff"
+                                     AcceptsReturn="True"
+                                     MaxHeight="150"
+                                     VerticalContentAlignment="Center"
+                                     Margin="8,4">
+                                <TextBox.KeyBindings>
+                                    <KeyBinding Gesture="Enter" Command="{Binding SendMessageCommand}" />
+                                </TextBox.KeyBindings>
+                            </TextBox>
+                            
+                            <Button Grid.Column="1" 
+                                    Command="{Binding SendMessageCommand}"
+                                    Background="#00ffd8"
+                                    Foreground="#000000"
+                                    CornerRadius="6"
+                                    Margin="4"
+                                    Padding="12,8"
+                                    FontWeight="Bold"
+                                    VerticalAlignment="Bottom">
+                                Send
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Panel>
+        </Border>
+
+    </Grid>
+</UserControl>

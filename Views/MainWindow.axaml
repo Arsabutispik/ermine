@@ -1,0 +1,11 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Ermine.ViewModels"
+        x:Class="Ermine.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="Ermine" Width="1000" Height="700"
+        WindowStartupLocation="CenterScreen">
+
+    <ContentControl Content="{Binding CurrentPage}" />
+
+</Window>
