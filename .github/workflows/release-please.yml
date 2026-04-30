@@ -55,14 +55,36 @@ jobs:
         if: matrix.rid == 'linux-x64'
         shell: bash
         run: |
-          dotnet tool install --global dotnet-appimage
-          dotnet appimage -r linux-x64 -c Release
-          
-          # The tool buries the AppImage in the bin/Release/net10.0/linux-x64/ folder.
-          # This creates a clean output folder and moves the AppImage there for easier uploading.
+          wget -q -O appimagetool "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
+          chmod +x appimagetool
+        
+          mkdir -p AppDir/usr/bin
+          cp -r out/linux-x64/* AppDir/usr/bin/
+          chmod +x AppDir/usr/bin/Ermine
+        
+          cat <<EOF > AppDir/Ermine.desktop
+          [Desktop Entry]
+          Type=Application
+          Name=Ermine
+          Exec=Ermine
+          Icon=Ermine
+          Categories=Utility;
+          EOF
+        
+          wget -q -O AppDir/Ermine.png "https://raw.githubusercontent.com/AppImage/AppImageKit/master/resources/appimagetool.png"
+        
+          cat <<EOF > AppDir/AppRun
+          #!/bin/sh
+          HERE="\$(dirname "\$(readlink -f "\${0}")")"
+          exec "\${HERE}/usr/bin/Ermine" "\$@"
+          EOF
+          chmod +x AppDir/AppRun
+        
+          ./appimagetool --appimage-extract-and-run AppDir Ermine-Linux-x86_64.AppImage
+        
           mkdir -p appimage-out
-          find . -name "*.AppImage" -exec mv {} appimage-out/Ermine-Linux-x86_64.AppImage \;
-
+          mv Ermine-Linux-x86_64.AppImage appimage-out/
+      
       - name: Zip portable artifacts
         shell: bash
         run: |
