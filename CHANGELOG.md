@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/Arsabutispik/ermine/compare/v0.1.2...v0.2.0) (2026-04-30)
+
+
+### Features
+
+* initial setup for testing release workflow ([21ef7f6](https://github.com/Arsabutispik/ermine/commit/21ef7f682d862c1de4b02dc0052fb774b013dba8))
+
 ## [0.1.2](https://github.com/Arsabutispik/ermine/compare/v0.1.1...v0.1.2) (2026-04-27)
 
 
