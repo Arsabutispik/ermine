@@ -84,8 +84,14 @@ jobs:
         
           mkdir -p appimage-out
           mv Ermine-Linux-x86_64.AppImage appimage-out/
-      
-      - name: Zip portable artifacts
+
+      - name: Zip portable artifacts (Windows)
+        if: matrix.rid == 'win-x64'
+        shell: pwsh
+        run: Compress-Archive -Path out/${{ matrix.rid }}/* -DestinationPath ermine-${{ matrix.rid }}-portable.zip
+
+      - name: Zip portable artifacts (Linux)
+        if: matrix.rid == 'linux-x64'
         shell: bash
         run: |
           cd out/${{ matrix.rid }}
