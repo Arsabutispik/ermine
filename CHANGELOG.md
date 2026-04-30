@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/Arsabutispik/ermine/compare/v0.3.0...v0.4.0) (2026-04-30)
+
+
+### Features
+
+* add zipping for portable artifacts in release-please.yml ([3943b85](https://github.com/Arsabutispik/ermine/commit/3943b858b2f17a311f90c67faae4b1b44731e980))
+
 ## [0.3.0](https://github.com/Arsabutispik/ermine/compare/v0.2.0...v0.3.0) (2026-04-30)
 
 
