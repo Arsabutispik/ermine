@@ -1,0 +1,108 @@
+﻿name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          release-type: simple
+
+  build:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - rid: win-x64
+            os: windows-latest
+          - rid: linux-x64
+            os: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish Portable Binaries
+        run: dotnet publish Ermine.csproj -r ${{ matrix.rid }} -c Release --self-contained -o out/${{ matrix.rid }}
+
+      - name: Build Windows Installer
+        if: matrix.rid == 'win-x64'
+        shell: bash
+        run: |
+          TAG_NAME="${{ needs.release-please.outputs.tag_name }}"
+          VERSION="${TAG_NAME#v}"
+          iscc //DAppVersion="$VERSION" Ermine.iss
+
+      - name: Build Linux AppImage
+        if: matrix.rid == 'linux-x64'
+        shell: bash
+        run: |
+          wget -q -O appimagetool "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
+          chmod +x appimagetool
+        
+          mkdir -p AppDir/usr/bin
+          cp -r out/linux-x64/* AppDir/usr/bin/
+          chmod +x AppDir/usr/bin/Ermine
+        
+          cat <<EOF > AppDir/Ermine.desktop
+          [Desktop Entry]
+          Type=Application
+          Name=Ermine
+          Exec=Ermine
+          Icon=Ermine
+          Categories=Utility;
+          EOF
+        
+          wget -q -O AppDir/Ermine.png "https://raw.githubusercontent.com/AppImage/AppImageKit/master/resources/appimagetool.png"
+        
+          cat <<EOF > AppDir/AppRun
+          #!/bin/sh
+          HERE="\$(dirname "\$(readlink -f "\${0}")")"
+          exec "\${HERE}/usr/bin/Ermine" "\$@"
+          EOF
+          chmod +x AppDir/AppRun
+        
+          ./appimagetool --appimage-extract-and-run AppDir Ermine-Linux-x86_64.AppImage
+        
+          mkdir -p appimage-out
+          mv Ermine-Linux-x86_64.AppImage appimage-out/
+
+      - name: Zip portable artifacts (Windows)
+        if: matrix.rid == 'win-x64'
+        shell: pwsh
+        run: Compress-Archive -Path out/${{ matrix.rid }}/* -DestinationPath ermine-${{ matrix.rid }}-portable.zip
+
+      - name: Zip portable artifacts (Linux)
+        if: matrix.rid == 'linux-x64'
+        shell: bash
+        run: |
+          cd out/${{ matrix.rid }}
+          zip -r ../../ermine-${{ matrix.rid }}-portable.zip ./*
+          cd ../..
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          files: |
+            ermine-${{ matrix.rid }}-portable.zip
+            installer-out/*.exe
+            appimage-out/*.AppImage

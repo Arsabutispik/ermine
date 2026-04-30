@@ -1,0 +1,60 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Ermine.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Ermine.Views.LoginView"
+             x:DataType="vm:LoginViewModel">
+    <Grid Name="RootGrid">
+        <StackPanel Spacing="15" HorizontalAlignment="Center" VerticalAlignment="Center" Width="280">
+
+            <TextBlock Text="Log in to Ermine" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"
+                       Margin="0,0,0,10" />
+
+            <StackPanel Spacing="15" IsVisible="{Binding !IsMfaRequired}">
+                <TextBox Text="{Binding Email}" PlaceholderText="Email Address" IsEnabled="{Binding !IsLoggingIn}" />
+                <TextBox Text="{Binding Password}" PlaceholderText="Password" PasswordChar="•"
+                         IsEnabled="{Binding !IsLoggingIn}" />
+                <TextBox Text="{Binding InstanceUrl}" PlaceholderText="Custom Instance URL (Optional)" 
+                         IsVisible="{Binding !HasSavedInstanceUrls}" IsEnabled="{Binding !IsLoggingIn}" />
+                <ComboBox IsEditable="True" Text="{Binding InstanceUrl}" 
+                          ItemsSource="{Binding SavedInstanceUrls}" 
+                          PlaceholderText="Custom Instance URL (Optional)"
+                          IsVisible="{Binding HasSavedInstanceUrls}"
+                          HorizontalAlignment="Stretch"
+                          IsEnabled="{Binding !IsLoggingIn}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Text="{Binding}" VerticalAlignment="Center" Grid.Column="0" />
+                                <Button Content="🗑" 
+                                        Command="{Binding #RootGrid.((vm:LoginViewModel)DataContext).RemoveSpecificInstanceUrlCommand}" 
+                                        CommandParameter="{Binding}"
+                                        Foreground="#8B0000" Background="Transparent" BorderThickness="0"
+                                        Grid.Column="1" Padding="5,0"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Content="Login" Command="{Binding AttemptLoginCommand}" HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center" IsEnabled="{Binding !IsLoggingIn}" />
+            </StackPanel>
+
+            <StackPanel Spacing="15" IsVisible="{Binding IsMfaRequired}">
+                <TextBlock Text="Two-Factor Authentication" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                <TextBlock Text="Enter the 6-digit code from your authenticator app." TextWrapping="Wrap"
+                           HorizontalAlignment="Center" TextAlignment="Center" Foreground="Gray" />
+
+                <TextBox Text="{Binding TotpCode}" PlaceholderText="000000" HorizontalAlignment="Center" Width="120"
+                         TextAlignment="Center" LetterSpacing="2" IsEnabled="{Binding !IsLoggingIn}" />
+
+                <Button Content="Verify" Command="{Binding SubmitMfaCommand}" HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center" IsEnabled="{Binding !IsLoggingIn}" />
+            </StackPanel>
+
+            <TextBlock Text="{Binding StatusMessage}" HorizontalAlignment="Center" Foreground="Gray" TextWrapping="Wrap"
+                       TextAlignment="Center" />
+        </StackPanel>
+    </Grid>
+</UserControl>
