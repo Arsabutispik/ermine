@@ -1,0 +1,82 @@
+﻿    using System;
+    using System.Threading.Tasks;
+    using CommunityToolkit.Mvvm.ComponentModel;
+    using CommunityToolkit.Mvvm.Messaging;
+    using Ermine.Models;
+    using Serilog;
+    using Velopack;       
+    using Velopack.Sources; 
+
+    namespace Ermine.ViewModels;
+
+    public record LoginSuccessMessage(string Token, string UserId);
+
+    public record LogoutMessage;
+
+    public partial class MainWindowViewModel : ViewModelBase
+    {
+        [ObservableProperty] private ViewModelBase _currentPage;
+
+        public MainWindowViewModel()
+        {
+            CurrentPage = new LoginViewModel();
+
+            _ = CheckForSavedSessionAsync();
+            
+            _ = CheckForUpdatesInBackgroundAsync();
+
+            WeakReferenceMessenger.Default.Register<LoginSuccessMessage>(this, (r, message) =>
+            {
+                CurrentPage = new MainChatViewModel(message.Token, new GatewayClient(message.Token));
+            });
+
+            WeakReferenceMessenger.Default.Register<LogoutMessage>(this,
+                (r, message) => { CurrentPage = new LoginViewModel(); });
+        }
+
+        private async Task CheckForSavedSessionAsync()
+        {
+            var apiClient = new ApiClient();
+            var token = apiClient.TryLoadSavedSession();
+            var gatewayClient = new GatewayClient(token);
+
+            if (!string.IsNullOrEmpty(token))
+                CurrentPage = new MainChatViewModel(token, gatewayClient);
+        }
+
+        private async Task CheckForUpdatesInBackgroundAsync()
+        {
+            try
+            {
+                var source = new GithubSource("https://github.com/Arsabutispik/Ermine", null, false);
+                var mgr = new UpdateManager(source);
+
+                if (!mgr.IsInstalled)
+                {
+                    Log.Information("Velopack is not installed (likely running from IDE). Skipping update check.");
+                    return;
+                }
+
+                Log.Information("Checking for Ermine updates...");
+                
+                var newVersion = await mgr.CheckForUpdatesAsync();
+                if (newVersion == null)
+                {
+                    Log.Information("Ermine is up to date.");
+                    return; 
+                }
+
+                Log.Information($"New version found: {newVersion.TargetFullRelease.Version}. Downloading in background...");
+
+                await mgr.DownloadUpdatesAsync(newVersion);
+
+                Log.Information("Update downloaded successfully. Applying and restarting...");
+
+                mgr.WaitExitThenApplyUpdates(newVersion);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to check for or apply updates.");
+            }
+        }
+    }
