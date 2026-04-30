@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - main
-    
+
 permissions:
   contents: write
   pull-requests: write
-  
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -25,25 +25,56 @@ jobs:
   build:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        rid: [win-x64, linux-x64]
+        include:
+          - rid: win-x64
+            os: windows-latest
+          - rid: linux-x64
+            os: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '10.0.x'
 
-      - name: Publish
+      - name: Publish Portable Binaries
         run: dotnet publish Ermine.csproj -r ${{ matrix.rid }} -c Release --self-contained -o out/${{ matrix.rid }}
 
-      - name: Zip artifacts
-        run: zip -r ermine-${{ matrix.rid }}.zip out/${{ matrix.rid }}
+      - name: Build Windows Installer
+        if: matrix.rid == 'win-x64'
+        shell: bash
+        run: |
+          TAG_NAME="${{ needs.release-please.outputs.tag_name }}"
+          VERSION="${TAG_NAME#v}"
+          iscc //DAppVersion="$VERSION" Ermine.iss
+
+      - name: Build Linux AppImage
+        if: matrix.rid == 'linux-x64'
+        shell: bash
+        run: |
+          dotnet tool install --global dotnet-appimage
+          dotnet appimage -r linux-x64 -c Release
+          
+          # The tool buries the AppImage in the bin/Release/net10.0/linux-x64/ folder.
+          # This creates a clean output folder and moves the AppImage there for easier uploading.
+          mkdir -p appimage-out
+          find . -name "*.AppImage" -exec mv {} appimage-out/Ermine-Linux-x86_64.AppImage \;
+
+      - name: Zip portable artifacts
+        shell: bash
+        run: |
+          cd out/${{ matrix.rid }}
+          zip -r ../../ermine-${{ matrix.rid }}-portable.zip ./*
+          cd ../..
 
       - name: Upload to release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.release-please.outputs.tag_name }}
-          files: ermine-${{ matrix.rid }}.zip
+          files: |
+            ermine-${{ matrix.rid }}-portable.zip
+            installer-out/*.exe
+            appimage-out/*.AppImage
