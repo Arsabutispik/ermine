@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0 (2026-04-30)
+
+
+### Features
+
+* initial release of Ermine ([ca5d5d8](https://github.com/Arsabutispik/ermine/commit/ca5d5d858894c587d3cbe0250b96b8f1dbbdc09f))
+
 ## [0.4.0](https://github.com/Arsabutispik/ermine/compare/v0.3.0...v0.4.0) (2026-04-30)
 
 
