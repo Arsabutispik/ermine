@@ -369,9 +369,9 @@
                 <Border Grid.Column="0" Width="40" Height="40" 
                         CornerRadius="20" ClipToBounds="True"
                         VerticalAlignment="Top" Background="#003e49">
-                    <Image Source="{Binding Avatar}"
+                    <Image asyncImageLoader:ImageLoader.Source="{Binding DisplayAvatarUrl}"
                            Stretch="UniformToFill"
-                           RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                           />
                 </Border>
 
                 <StackPanel Grid.Column="1" Margin="12,0,0,0">
@@ -402,8 +402,7 @@
                                         Width="{Binding DisplayWidth}"
                                         Height="{Binding DisplayHeight}">
                                     <Image asyncImageLoader:ImageLoader.Source="{Binding Url}"
-                                           Stretch="Uniform"
-                                           RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                                           Stretch="Uniform"/>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

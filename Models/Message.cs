@@ -55,7 +55,6 @@ public record Message(
     //[property: JsonPropertyName("webhook")] MessageWebhook? = null
 )
 {
-    [JsonIgnore] public Bitmap? Avatar { get; set; }
     [JsonIgnore] public string DisplayAuthorName => Masquerade?.Name ?? User?.Username ?? Author;
     
     [JsonIgnore]

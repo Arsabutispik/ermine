@@ -27,7 +27,7 @@
 
             WeakReferenceMessenger.Default.Register<LoginSuccessMessage>(this, (r, message) =>
             {
-                CurrentPage = new MainChatViewModel(message.Token, new GatewayClient(message.Token));
+                CurrentPage = new MainChatViewModel(message.Token);
             });
 
             WeakReferenceMessenger.Default.Register<LogoutMessage>(this,
@@ -38,10 +38,9 @@
         {
             var apiClient = new ApiClient();
             var token = apiClient.TryLoadSavedSession();
-            var gatewayClient = new GatewayClient(token);
 
             if (!string.IsNullOrEmpty(token))
-                CurrentPage = new MainChatViewModel(token, gatewayClient);
+                CurrentPage = new MainChatViewModel(token);
         }
 
         private async Task CheckForUpdatesInBackgroundAsync()

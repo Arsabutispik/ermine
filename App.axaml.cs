@@ -24,11 +24,6 @@ public class App : Application
             "Ermine", 
             "ImageCache");
         
-        if (!Directory.Exists(cacheDirectory))
-        {
-            Directory.CreateDirectory(cacheDirectory);
-        }
-        
         ImageLoader.AsyncImageLoader = new LruDiskCachedImageLoader(cacheDirectory);
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

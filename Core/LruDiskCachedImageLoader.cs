@@ -2,6 +2,8 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncImageLoader;
 using AsyncImageLoader.Loaders;
@@ -12,6 +14,8 @@ public class LruDiskCachedImageLoader : IAsyncImageLoader
     private readonly BaseWebImageLoader _http = new();
     private readonly LruCache<string, Bitmap> _ramCache;
     private readonly string _cacheDir;
+    private readonly Dictionary<string, Task<Bitmap?>> _inFlight = new();
+    private readonly SemaphoreSlim _lock = new(1, 1);
 
     public LruDiskCachedImageLoader(string cacheDir, int maxEntries = 150)
     {
@@ -25,19 +29,41 @@ public class LruDiskCachedImageLoader : IAsyncImageLoader
         if (_ramCache.TryGetValue(url, out var cached))
             return cached;
 
-        var diskPath = GetDiskPath(url);
+        await _lock.WaitAsync();
+        Task<Bitmap?> task;
+        if (_inFlight.TryGetValue(url, out var existing))
+        {
+            _lock.Release();
+            task = existing;
+        }
+        else
+        {
+            task = LoadAsync(url);
+            _inFlight[url] = task;
+            _lock.Release();
+        }
 
+        var result = await task;
+
+        await _lock.WaitAsync();
+        _inFlight.Remove(url);
+        _lock.Release();
+
+        return result;
+    }
+
+    private async Task<Bitmap?> LoadAsync(string url)
+    {
+        var diskPath = GetDiskPath(url);
         Bitmap? bitmap = null;
 
         if (File.Exists(diskPath))
         {
-            bitmap = new Bitmap(diskPath);
+            bitmap = Bitmap.DecodeToWidth(File.OpenRead(diskPath), 80);
         }
         else
         {
-            // Download via BaseWebImageLoader (no internal cache)
             bitmap = await _http.ProvideImageAsync(url);
-
             if (bitmap != null)
                 await SaveToDiskAsync(bitmap, diskPath);
         }
@@ -51,7 +77,7 @@ public class LruDiskCachedImageLoader : IAsyncImageLoader
     private string GetDiskPath(string url)
     {
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(url)));
-        return Path.Combine(_cacheDir, hash);
+        return Path.Combine(_cacheDir, hash + ".png");
     }
 
     private static async Task SaveToDiskAsync(Bitmap bitmap, string path)

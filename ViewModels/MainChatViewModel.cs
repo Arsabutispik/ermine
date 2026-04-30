@@ -34,20 +34,8 @@ public partial class MainChatViewModel : ViewModelBase
     public ObservableCollection<Server> Servers { get; } = new();
     public ObservableCollection<ChannelGroup> ServerChannelGroups { get; set; } = new();
     public ObservableCollection<Message> CurrentMessages { get; } = new();
-    private readonly Dictionary<string, Bitmap> _avatarCache = new();
 
-    private async Task<Bitmap?> GetAvatarAsync(string url)
-    {
-        if (_avatarCache.TryGetValue(url, out var cached))
-            return cached;
-
-        var bytes = await ApiClient.Http.GetByteArrayAsync(url);
-        var bitmap = Bitmap.DecodeToWidth(new MemoryStream(bytes), 80);
-        _avatarCache[url] = bitmap;
-        return bitmap;
-    }
-
-    public MainChatViewModel(string sessionToken, GatewayClient gatewayClient)
+    public MainChatViewModel(string sessionToken)
     {
         InitializeGateway(sessionToken);
     }
@@ -56,9 +44,6 @@ public partial class MainChatViewModel : ViewModelBase
     {
         if (SelectedChannel == null || incomingMessage.Channel != SelectedChannel.Id) 
             return;
-
-        if (incomingMessage.DisplayAvatarUrl is { } url)
-            incomingMessage.Avatar = await GetAvatarAsync(url);
 
         Dispatcher.UIThread.Post(() =>
         {
@@ -217,14 +202,6 @@ public partial class MainChatViewModel : ViewModelBase
     
         messages.Reverse();
 
-        // Load all avatars in parallel
-        await Task.WhenAll(messages.Select(async msg =>
-        {
-            if (msg.DisplayAvatarUrl is { } url)
-                msg.Avatar = await GetAvatarAsync(url);
-        }));
-
-        // Add all messages at once
         foreach (var msg in messages)
             CurrentMessages.Add(msg);
     }
