@@ -27,8 +27,4 @@
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0"/>
         <PackageReference Include="Velopack" Version="0.0.1589-ga2c5a97" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Content Include=".github\workflows\release-please.yml" />
-    </ItemGroup>
 </Project>

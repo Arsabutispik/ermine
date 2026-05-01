@@ -480,3 +480,7 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Ignore JetBrains Rider project files
+.idea/
+*.sln.iml

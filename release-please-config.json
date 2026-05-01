@@ -1,9 +1,8 @@
 ﻿{
   "packages": {
     ".": {
-      "release-type": "simple",
-      "initial-version": "0.1.0",
-      "bootstrap-sha": "be51a802e94aa205f0c15c542a63b1cab073afb3\n"
+      "release-type": "dotnet",
+      "initial-version": "0.1.0"
     }
   }
 }
