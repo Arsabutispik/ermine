@@ -1,8 +1,15 @@
 {
   "packages": {
     "Ermine": {
-      "release-type": "dotnet",
-      "include-component-in-tag": false
+      "release-type": "simple",
+      "include-component-in-tag": false,
+      "extra-files": [
+        {
+          "type": "xml",
+          "path": "Ermine.csproj",
+          "xpath": "//PropertyGroup/Version"
+        }
+      ]
     }
   }
 }
