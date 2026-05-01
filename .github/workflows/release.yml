@@ -20,7 +20,6 @@ jobs:
         id: release
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
-          release-type: simple
 
   build:
     needs: release-please
@@ -41,7 +40,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Publish Binaries
-        run: dotnet publish Ermine.csproj -r ${{ matrix.rid }} -c Release --self-contained -o out/${{ matrix.rid }}
+        run: dotnet publish Ermine/Ermine.csproj -r ${{ matrix.rid }} -c Release --self-contained -o out/${{ matrix.rid }}
 
       - name: Install Velopack
         run: dotnet tool install -g vpk
