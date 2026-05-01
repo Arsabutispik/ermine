@@ -1,25 +1,29 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncImageLoader;
-using AsyncImageLoader.Loaders;
 using Avalonia.Media.Imaging;
+
+namespace Ermine.Core;
 
 public class LruDiskCachedImageLoader : IAsyncImageLoader
 {
-    private readonly BaseWebImageLoader _http = new();
     private readonly LruCache<string, Bitmap> _ramCache;
     private readonly string _cacheDir;
+    private readonly int? _decodeWidth;
     private readonly Dictionary<string, Task<Bitmap?>> _inFlight = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
+    private readonly HttpClient _rawHttp = new();
 
-    public LruDiskCachedImageLoader(string cacheDir, int maxEntries = 150)
+    public LruDiskCachedImageLoader(string cacheDir, int maxEntries = 150, int? decodeWidth = null)
     {
         _cacheDir = cacheDir;
+        _decodeWidth = decodeWidth;
         _ramCache = new LruCache<string, Bitmap>(maxEntries);
         Directory.CreateDirectory(cacheDir);
     }
@@ -55,35 +59,48 @@ public class LruDiskCachedImageLoader : IAsyncImageLoader
     private async Task<Bitmap?> LoadAsync(string url)
     {
         var diskPath = GetDiskPath(url);
-        Bitmap? bitmap = null;
+        Bitmap? bitmap;
 
-        if (File.Exists(diskPath))
+        try
         {
-            bitmap = Bitmap.DecodeToWidth(File.OpenRead(diskPath), 80);
-        }
-        else
-        {
-            bitmap = await _http.ProvideImageAsync(url);
+            if (File.Exists(diskPath))
+            {
+                bitmap = _decodeWidth.HasValue
+                    ? Bitmap.DecodeToWidth(File.OpenRead(diskPath), _decodeWidth.Value)
+                    : new Bitmap(diskPath);
+            }
+            else
+            {
+                var bytes = await _rawHttp.GetByteArrayAsync(url);
+                await File.WriteAllBytesAsync(diskPath, bytes);
+
+                bitmap = _decodeWidth.HasValue
+                    ? Bitmap.DecodeToWidth(new MemoryStream(bytes), _decodeWidth.Value)
+                    : new Bitmap(new MemoryStream(bytes));
+            }
+
             if (bitmap != null)
-                await SaveToDiskAsync(bitmap, diskPath);
+                _ramCache.Add(url, bitmap);
+
+            return bitmap;
         }
-
-        if (bitmap != null)
-            _ramCache.Add(url, bitmap);
-
-        return bitmap;
+        catch
+        {
+            if (File.Exists(diskPath))
+                File.Delete(diskPath);
+            return null;
+        }
     }
 
     private string GetDiskPath(string url)
     {
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(url)));
-        return Path.Combine(_cacheDir, hash + ".png");
+        return Path.Combine(_cacheDir, hash + ".bin");
     }
 
-    private static async Task SaveToDiskAsync(Bitmap bitmap, string path)
+    public void Dispose()
     {
-        await Task.Run(() => bitmap.Save(path));
+        _rawHttp.Dispose();
+        _lock.Dispose();
     }
-
-    public void Dispose() => _http.Dispose();
 }

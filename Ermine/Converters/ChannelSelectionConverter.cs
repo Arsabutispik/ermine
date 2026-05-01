@@ -10,11 +10,8 @@ public class ChannelSelectionConverter : IMultiValueConverter
 {
     public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (values?.Count == 2 && values[0] is Channel currentChannel && values[1] is Channel selectedChannel)
-        {
-            return currentChannel.Id == selectedChannel.Id;
-        }
-        
+        if (values[0] is Channel a && values[1] is Channel b)
+            return a.Id == b.Id; 
         return false;
     }
 }

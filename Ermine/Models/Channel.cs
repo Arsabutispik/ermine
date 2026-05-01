@@ -41,11 +41,44 @@ public record Channel
         TextChannel t => t.Name,
         Group g => g.Name,
         SavedMessagesChannel => "Saved Notes",
+        DirectMessageChannel d => GetDirectMessageName(d),
         _ => "Unknown Channel"
     };
+
+    private string GetDirectMessageName(DirectMessageChannel d)
+    {
+        if (d.Recipients != null && GlobalCache.CurrentUserId != null)
+        {
+            var otherId = System.Linq.Enumerable.FirstOrDefault(d.Recipients, r => r != GlobalCache.CurrentUserId);
+            if (otherId != null && GlobalCache.Users.TryGetValue(otherId, out var otherUser))
+            {
+                return otherUser.DisplayName ?? otherUser.Username;
+            }
+        }
+        return "Direct Message";
+    }
     
     [JsonIgnore]
-    public string? IconUrl => (this as TextChannel)?.IconUrl;
+    public string? IconUrl => this switch
+    {
+        TextChannel t => t.Icon != null ? $"{ApiClient.AutumnUrl}/icons/{t.Icon.Id}" : null,
+        Group g => g.Icon != null ? $"{ApiClient.AutumnUrl}/icons/{g.Icon.Id}" : null,
+        DirectMessageChannel d => GetDirectMessageIcon(d),
+        _ => null
+    };
+
+    private string? GetDirectMessageIcon(DirectMessageChannel d)
+    {
+        if (d.Recipients != null && GlobalCache.CurrentUserId != null)
+        {
+            var otherId = System.Linq.Enumerable.FirstOrDefault(d.Recipients, r => r != GlobalCache.CurrentUserId);
+            if (otherId != null && GlobalCache.Users.TryGetValue(otherId, out var otherUser))
+            {
+                return otherUser.AvatarUrl;
+            }
+        }
+        return null;
+    }
 }
 
 public record SavedMessagesChannel : Channel
@@ -139,8 +172,4 @@ public record TextChannel : Channel
     
     [JsonPropertyName("voice")]
     public VoiceInformation? Voice { get; init; }
-    
-    public new string? IconUrl => Icon != null 
-        ? $"{ApiClient.AutumnUrl}/icons/{Icon.Id}" 
-        : null;
 }

@@ -11,36 +11,42 @@
         <converters:ChannelSelectionConverter x:Key="ChannelSelectionConverter"/>
     </UserControl.Resources>
 
-    <Grid ColumnDefinitions="60, 240, *">
+    <Grid ColumnDefinitions="64, 240, *">
 
         <Border Grid.Column="0" Background="#000000">
             <Grid RowDefinitions="Auto, *, Auto">
 
-                <StackPanel Grid.Row="0" Margin="0,10,0,0">
-                    <Border Width="48" Height="48"
-                            ClipToBounds="True"
-                            CornerRadius="24"
-                            Background="#2a233a"
+                <StackPanel Grid.Row="0" Margin="0,10,0,0" HorizontalAlignment="Center">
+                    <Button Background="Transparent"
+                            BorderThickness="0"
+                            Padding="0"
+                            HorizontalAlignment="Center"
+                            Command="{Binding SelectHomeCommand}"
+                            Cursor="Hand"
                             ToolTip.Tip="{Binding CurrentUser.DisplayName,  StringFormat='@ {0}'}"
                             ToolTip.Placement="Right"
                             ToolTip.VerticalOffset="0"
-                            ToolTip.HorizontalOffset="3"
-                            Cursor="Hand">
-                        <Border.Styles>
-                            <Style Selector="Border">
-                                <Setter Property="Transitions">
-                                    <Transitions>
-                                        <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.2" />
-                                    </Transitions>
-                                </Setter>
-                            </Style>
-                            <Style Selector="Border:pointerover">
-                                <Setter Property="CornerRadius" Value="16" />
-                            </Style>
-                        </Border.Styles>
-                        <Image asyncImageLoader:ImageLoader.Source="{Binding CurrentUser.AvatarUrl}"
-                               Stretch="UniformToFill" />
-                    </Border>
+                            ToolTip.HorizontalOffset="3">
+                        <Border Width="44" Height="44"
+                                ClipToBounds="True"
+                                CornerRadius="22"
+                                Background="#2a233a">
+                            <Border.Styles>
+                                <Style Selector="Border">
+                                    <Setter Property="Transitions">
+                                        <Transitions>
+                                            <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.2" />
+                                        </Transitions>
+                                    </Setter>
+                                </Style>
+                                <Style Selector="Button:pointerover Border">
+                                    <Setter Property="CornerRadius" Value="14" />
+                                </Style>
+                            </Border.Styles>
+                            <Image asyncImageLoader:ImageLoader.Source="{Binding CurrentUser.AvatarUrl}"
+                                   Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality" />
+                        </Border>
+                    </Button>
                     
                     <Border Height="2" Width="32" Background="#003e49" Margin="0,8,0,0" CornerRadius="1"/>
                 </StackPanel>
@@ -56,27 +62,25 @@
                                 <Setter Property="Margin" Value="0,4" />
                                 <Setter Property="Template">
                                     <ControlTemplate>
-                                        <Grid Name="RootGrid" ColumnDefinitions="4, *">
-            
+                                        <Panel HorizontalAlignment="Center">
+                                            <ContentPresenter Name="PART_ContentPresenter"
+                                                              Background="Transparent"
+                                                              Content="{TemplateBinding Content}"
+                                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                              HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center"
+                                                              Margin="0,0,0,0" />
+
                                             <Rectangle Name="Indicator"
-                                                       Grid.Column="0"
                                                        Width="4"
                                                        Fill="#00ffd8"
                                                        VerticalAlignment="Center"
                                                        HorizontalAlignment="Left"
-                                                       Height="0" 
+                                                       Height="0"
                                                        Opacity="0"
-                                                       RadiusX="2" RadiusY="2" />
-
-                                            <ContentPresenter Name="PART_ContentPresenter"
-                                                              Grid.Column="1"
-                                                              Background="Transparent"
-                                                              Content="{TemplateBinding Content}"
-                                                              ContentTemplate="{TemplateBinding ContentTemplate}"
-                                                              HorizontalAlignment="Left"
-                                                              VerticalAlignment="Center"
-                                                              Margin="2,0,0,0" /> 
-                                        </Grid>
+                                                       RadiusX="2" RadiusY="2"
+                                                       Margin="-6,0,0,0"/>
+                                        </Panel>
                                     </ControlTemplate>
                                 </Setter>
                             </Style>
@@ -85,10 +89,9 @@
                                 <Setter Property="Opacity" Value="0.5" />
                                 <Setter Property="Height" Value="20" />
                             </Style>
-
                             <Style Selector="ListBoxItem:selected Rectangle#Indicator">
                                 <Setter Property="Opacity" Value="1" />
-                                <Setter Property="Height" Value="40" />
+                                <Setter Property="Height" Value="36" />
                             </Style>
 
                             <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
@@ -111,16 +114,16 @@
 
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Border Width="48" Height="48"
+                                <Border Width="44" Height="44"
                                         ClipToBounds="True"
-                                        CornerRadius="24"
+                                        CornerRadius="22"
                                         Background="#2a233a"
                                         ToolTip.Tip="{Binding Name}"
                                         ToolTip.Placement="Right"
                                         ToolTip.VerticalOffset="0"
                                         ToolTip.HorizontalOffset="3">
                                     <Image asyncImageLoader:ImageLoader.Source="{Binding IconUrl}"
-                                           Stretch="UniformToFill" />
+                                           Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality" />
                                 </Border>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -141,11 +144,11 @@
         </Border>
 
         <Border Grid.Column="1" Background="#2a233a" 
-                BorderBrush="#003e49" BorderThickness="0,0,1,0"
-                IsVisible="{Binding SelectedServer, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <Grid RowDefinitions="120, *">
-                
-                <Border Grid.Row="0" BorderBrush="#003e49" BorderThickness="0,0,0,1">
+                BorderBrush="#003e49" BorderThickness="0,0,1,0">
+            <Panel>
+                <Grid RowDefinitions="120, *" IsVisible="{Binding SelectedServer, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    
+                    <Border Grid.Row="0" BorderBrush="#003e49" BorderThickness="0,0,0,1">
                     <Panel>
                         <Image asyncImageLoader:ImageLoader.Source="{Binding SelectedServer.BannerUrl}"
                                Stretch="UniformToFill" />
@@ -295,7 +298,7 @@
                                                                 CornerRadius="4"
                                                                 IsVisible="{Binding IconUrl, Converter={x:Static ObjectConverters.IsNotNull}}">
                                                             <Image asyncImageLoader:ImageLoader.Source="{Binding IconUrl}"
-                                                                   Stretch="UniformToFill" />
+                                                                   Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality" />
                                                         </Border>
 
                                                         <TextBlock Text="{Binding DisplayName}"
@@ -313,7 +316,137 @@
                     </ItemsControl>
                 </ScrollViewer>
                 
-            </Grid>
+                </Grid>
+
+                <Grid RowDefinitions="*"
+      IsVisible="{Binding SelectedServer, Converter={x:Static ObjectConverters.IsNull}}">
+
+    <Grid.Styles>
+        <Style Selector="RadioButton.DMItem, Button.DMItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#949BA4"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Margin" Value="4,1"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter Content="{TemplateBinding Content}" 
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.1"/>
+                    <BrushTransition Property="Foreground" Duration="0:0:0.1"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="RadioButton.DMItem:pointerover, Button.DMItem:pointerover">
+            <Setter Property="Background" Value="#05ffffff"/>
+            <Setter Property="Foreground" Value="#ffffff"/>
+        </Style>
+        <Style Selector="RadioButton.DMItem:checked">
+            <Setter Property="Foreground" Value="#ffffff"/>
+            <Setter Property="Background" Value="#4d5382"/>
+        </Style>
+    </Grid.Styles>
+
+    <ScrollViewer Grid.Row="0">
+        <StackPanel Margin="0,16,0,4">
+            <TextBlock Text="Conversations"
+                       FontWeight="Bold"
+                       FontSize="15"
+                       Foreground="#ffffff"
+                       Margin="8,0,0,10"/>
+
+            <Button Classes="DMItem"
+                    Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).SelectChannelCommand}"
+                    CommandParameter="{Binding SavedNotesChannel}">
+                <Grid ColumnDefinitions="Auto, *" VerticalAlignment="Center">
+                    <Border Grid.Column="0" Width="32" Height="32"
+                            CornerRadius="8"
+                            Background="#003e49">
+                        <Viewbox Width="16" Height="16"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M17 3H7C5.9 3 5 3.9 5 5V21L12 18L19 21V5C19 3.9 18.1 3 17 3Z"
+                                      Fill="#00ffd8"/>
+                            </Canvas>
+                        </Viewbox>
+                    </Border>
+                    <TextBlock Grid.Column="1" Text="Saved Notes"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0"
+                               FontWeight="SemiBold"
+                               FontSize="14"
+                               Foreground="#d1d5db"/>
+                </Grid>
+            </Button>
+
+            <TextBlock Text="Direct Messages"
+                       FontWeight="Bold"
+                       FontSize="11"
+                       Foreground="#949BA4"
+                       Margin="8,10,0,4"/>
+
+            <ItemsControl ItemsSource="{Binding DirectMessages}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:Channel">
+                        <RadioButton Classes="DMItem"
+                                     GroupName="ServerChannels"
+                                     Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).SelectChannelCommand}"
+                                     CommandParameter="{Binding}">
+                            <RadioButton.IsChecked>
+                                <MultiBinding Converter="{StaticResource ChannelSelectionConverter}" Mode="OneWay">
+                                    <Binding />
+                                    <Binding Path="$parent[UserControl].((vm:MainChatViewModel)DataContext).SelectedChannel" />
+                                </MultiBinding>
+                            </RadioButton.IsChecked>
+
+                            <Grid ColumnDefinitions="Auto, *" VerticalAlignment="Center">
+                                <Panel Grid.Column="0" Width="32" Height="32">
+                                    <Border Width="32" Height="32"
+                                            ClipToBounds="True"
+                                            CornerRadius="16"
+                                            IsVisible="{Binding IconUrl, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                        <Image asyncImageLoader:ImageLoader.Source="{Binding IconUrl}"
+                                               Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                                    </Border>
+                                    <Border Width="32" Height="32"
+                                            ClipToBounds="True"
+                                            CornerRadius="16"
+                                            Background="#003e49"
+                                            IsVisible="{Binding IconUrl, Converter={x:Static ObjectConverters.IsNull}}">
+                                        <TextBlock Text="@"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="#ffffff"
+                                                   FontSize="14"/>
+                                    </Border>
+                                </Panel>
+                                <TextBlock Grid.Column="1" Text="{Binding DisplayName}"
+                                           VerticalAlignment="Center"
+                                           Margin="10,0,0,0"
+                                           FontWeight="SemiBold"
+                                           FontSize="14"/>
+                            </Grid>
+                        </RadioButton>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</Grid>
+            </Panel>
         </Border>
 
         <Border Grid.Column="2" Background="#2a233a">
@@ -370,8 +503,7 @@
                         CornerRadius="20" ClipToBounds="True"
                         VerticalAlignment="Top" Background="#003e49">
                     <Image asyncImageLoader:ImageLoader.Source="{Binding DisplayAvatarUrl}"
-                           Stretch="UniformToFill"
-                           />
+                           Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality" />
                 </Border>
 
                 <StackPanel Grid.Column="1" Margin="12,0,0,0">
