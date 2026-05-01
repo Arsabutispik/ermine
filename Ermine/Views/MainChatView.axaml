@@ -5,7 +5,8 @@
              xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:converters="clr-namespace:Ermine.Converters"
              x:Class="Ermine.Views.MainChatView"
-             x:DataType="vm:MainChatViewModel">
+             x:DataType="vm:MainChatViewModel"
+             DragDrop.AllowDrop="True">
     
     <UserControl.Resources>
         <converters:ChannelSelectionConverter x:Key="ChannelSelectionConverter"/>
@@ -545,36 +546,154 @@
     </ListBox.ItemTemplate>
 </ListBox>
 
-                    <Border Grid.Row="1" Background="#3b324d" CornerRadius="8" Margin="20,0,20,20" Padding="2">
-                        <Grid ColumnDefinitions="*, Auto">
-                            <TextBox Grid.Column="0"
-                                     Text="{Binding DraftMessage}"
-                                     PlaceholderText="Message #channel..."
-                                     Background="Transparent"
-                                     BorderThickness="0"
-                                     Foreground="#ffffff"
-                                     AcceptsReturn="True"
-                                     MaxHeight="150"
-                                     VerticalContentAlignment="Center"
-                                     Margin="8,4">
-                                <TextBox.KeyBindings>
-                                    <KeyBinding Gesture="Enter" Command="{Binding SendMessageCommand}" />
-                                </TextBox.KeyBindings>
-                            </TextBox>
-                            
-                            <Button Grid.Column="1" 
-                                    Command="{Binding SendMessageCommand}"
-                                    Background="#00ffd8"
-                                    Foreground="#000000"
-                                    CornerRadius="6"
-                                    Margin="4"
-                                    Padding="12,8"
-                                    FontWeight="Bold"
-                                    VerticalAlignment="Bottom">
-                                Send
-                            </Button>
-                        </Grid>
-                    </Border>
+<Border Grid.Row="1" Background="#383145" CornerRadius="8" Margin="20,0,20,20">
+    <Grid RowDefinitions="Auto, Auto">
+        
+        <!-- Staged attachments preview -->
+        <ItemsControl Grid.Row="0"
+                      ItemsSource="{Binding StagedAttachments}"
+                      IsVisible="{Binding !!StagedAttachments.Count}"
+                      Margin="12,12,12,0">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+    <DataTemplate x:DataType="models:StagedAttachment">
+        <Border Background="#2a233a" 
+                CornerRadius="8" 
+                Margin="0,0,10,10" 
+                Width="100" 
+                Height="120" 
+                ClipToBounds="True"
+                BoxShadow="0 4 8 0 #40000000">
+            <Grid RowDefinitions="*, Auto">
+                
+                <!-- Preview Image Area -->
+                <Panel Grid.Row="0" Background="#1a1a1a">
+                    <!-- Image Preview -->
+                    <Image Source="{Binding PreviewBitmap}" 
+                           Stretch="UniformToFill"
+                           IsVisible="{Binding PreviewBitmap, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                    
+                    <!-- File Icon Fallback (for non-images) -->
+                    <Viewbox Width="32" Height="32" 
+                             Opacity="0.5"
+                             IsVisible="{Binding PreviewBitmap, Converter={x:Static ObjectConverters.IsNull}}">
+                        <Path Data="M14,2H6C4.89,2 4,2.89 4,4V20C4,21.11 4.89,22 6,22H18C19.11,22 20,21.11 20,20V8L14,2M18,20H6V4H13V9H18V20Z" 
+                              Fill="#ffffff"/>
+                    </Viewbox>
+
+                    <!-- Close Button (Floating) -->
+                    <Button Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).RemoveStagedAttachmentCommand}"
+                            CommandParameter="{Binding}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top"
+                            Margin="4" Width="20" Height="20" 
+                            CornerRadius="10"
+                            Background="#aa000000"
+                            Padding="0" MinWidth="0" MinHeight="0">
+                        <TextBlock Text="✕" FontSize="10" Foreground="White" 
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                </Panel>
+
+                <!-- File Name Strip -->
+                <Border Grid.Row="1" Background="#383145" Padding="4,2">
+                    <TextBlock Text="{Binding FileName}"
+                               Foreground="#d1d5db" 
+                               FontSize="10"
+                               HorizontalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"/>
+                </Border>
+            </Grid>
+        </Border>
+    </DataTemplate>
+</ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto">
+            
+            <!-- Attachment Button -->
+            <Button Grid.Column="0"
+                    Command="{Binding PickAttachmentCommand}"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Width="32" Height="32"
+                    CornerRadius="16"
+                    Cursor="Hand"
+                    VerticalAlignment="Bottom"
+                    Margin="8,8,0,8">
+                <Button.Styles>
+                    <Style Selector="Button:pointerover /template/ ContentPresenter">
+                        <Setter Property="Background" Value="#1Affffff"/>
+                    </Style>
+                </Button.Styles>
+                <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Canvas Width="24" Height="24">
+                        <Path Data="M21.44 11.05L12.25 20.24C11.1 21.39 9.55 22.03 7.93 22.03C6.31 22.03 4.76 21.39 3.61 20.24C2.46 19.09 1.82 17.54 1.82 15.92C1.82 14.3 2.46 12.75 3.61 11.6L12.8 2.41C13.57 1.64 14.62 1.21 15.71 1.21C16.8 1.21 17.85 1.64 18.62 2.41C19.39 3.18 19.82 4.23 19.82 5.32C19.82 6.41 19.39 7.46 18.62 8.23L9.42 17.42C9.04 17.8 8.52 18.01 7.98 18.01C7.44 18.01 6.92 17.8 6.54 17.42C6.16 17.04 5.95 16.52 5.95 15.98C5.95 15.44 6.16 14.92 6.54 14.54L15.07 6.01"
+                              Stroke="#b5bac1" StrokeThickness="2" 
+                              StrokeLineCap="Round" StrokeJoin="Round"/>
+                    </Canvas>
+                </Viewbox>
+            </Button>
+
+            <!-- Text Input -->
+            <TextBox Grid.Column="1"
+                     x:Name="InputTextBox"
+                     Text="{Binding DraftMessage}"
+                     PlaceholderText="Message..."
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Foreground="#ffffff"
+                     CaretBrush="#ffffff"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     MaxHeight="150"
+                     MinHeight="32"
+                     Padding="8,8"
+                     VerticalAlignment="Bottom"
+                     VerticalContentAlignment="Top"
+                     Margin="4,8,4,8">
+                <TextBox.Styles>
+                    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderBrush" Value="Transparent"/>
+                    </Style>
+                    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                    </Style>
+                </TextBox.Styles>
+                <TextBox.KeyBindings>
+                    <KeyBinding Gesture="Enter" Command="{Binding SendMessageCommand}" />
+                    </TextBox.KeyBindings>
+            </TextBox>
+
+            <!-- Send Button -->
+            <Button Grid.Column="2"
+                    Command="{Binding SendMessageCommand}"
+                    Background="#00ffd8"
+                    Foreground="#000000"
+                    CornerRadius="6"
+                    Height="32"
+                    Margin="0,8,8,8"
+                    Padding="16,0"
+                    FontWeight="Bold"
+                    Cursor="Hand"
+                    VerticalAlignment="Bottom"
+                    VerticalContentAlignment="Center">
+                <Button.Styles>
+                    <Style Selector="Button:pointerover /template/ ContentPresenter">
+                        <Setter Property="Background" Value="#33ffde"/>
+                    </Style>
+                </Button.Styles>
+                Send
+            </Button>
+            
+        </Grid>
+    </Grid>
+</Border>
                 </Grid>
             </Panel>
         </Border>

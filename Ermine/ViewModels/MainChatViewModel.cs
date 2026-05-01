@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -8,6 +9,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Ermine.Models;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Platform.Storage;
 using Ermine.Core;
 using Serilog;
 
@@ -22,6 +24,20 @@ public partial class MainChatViewModel : ViewModelBase
     private readonly Dictionary<string, string> _serverChannelMemory = new();
     
     private readonly Dictionary<string, ObservableCollection<Message>> _messageCache = new();
+    
+    private static string GetMimeType(string fileName) =>
+        Path.GetExtension(fileName).ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            ".mp4" => "video/mp4",
+            ".mov" => "video/quicktime",
+            ".pdf" => "application/pdf",
+            ".txt" => "text/plain",
+            _ => "application/octet-stream"
+        };
 
     [ObservableProperty]
     public partial Server? SelectedServer { get; set; }
@@ -41,6 +57,9 @@ public partial class MainChatViewModel : ViewModelBase
     public ObservableCollection<Channel> DirectMessages { get; } = new();
     public ObservableCollection<ChannelGroup> ServerChannelGroups { get; set; } = new();
     public ObservableCollection<Message> CurrentMessages { get; set; } = new();
+    
+    [ObservableProperty]
+    public partial ObservableCollection<StagedAttachment> StagedAttachments { get; set; } = new();
 
     public MainChatViewModel(string sessionToken)
     {
@@ -248,20 +267,35 @@ public partial class MainChatViewModel : ViewModelBase
     [RelayCommand]
     private async Task SendMessageAsync()
     {
-        if (string.IsNullOrWhiteSpace(DraftMessage) || SelectedChannel == null)
-            return;
+        if (string.IsNullOrWhiteSpace(DraftMessage) && StagedAttachments.Count == 0) return;
+        if (SelectedChannel == null) return;
 
         var contentToSend = DraftMessage;
+        var attachmentsToSend = StagedAttachments.ToList();
 
         DraftMessage = string.Empty;
+        StagedAttachments.Clear();
 
         try
         {
-            await ApiClient.SendMessageAsync(SelectedChannel.Id, contentToSend);
+            var attachmentIds = new List<string>();
+            foreach (var attachment in attachmentsToSend)
+            {
+                var id = await ApiClient.UploadAttachmentAsync(
+                    attachment.FileName, 
+                    attachment.Data, 
+                    attachment.MimeType);
+                if (id != null)
+                    attachmentIds.Add(id);
+            }
+
+            await ApiClient.SendMessageAsync(SelectedChannel.Id, contentToSend, attachmentIds);
         }
         catch (Exception)
         {
             DraftMessage = contentToSend;
+            foreach (var a in attachmentsToSend)
+                StagedAttachments.Add(a);
         }
     }
 
@@ -356,5 +390,57 @@ public partial class MainChatViewModel : ViewModelBase
         apiClient.ClearSession();
 
         WeakReferenceMessenger.Default.Send(new LogoutMessage());
+    }
+    
+    [RelayCommand]
+    private async Task PickAttachmentAsync()
+    {
+        var files = await WeakReferenceMessenger.Default.Send(
+            new PickFilesMessage(new FilePickerOpenOptions { AllowMultiple = true }));
+
+        if (files == null) return;
+
+        foreach (var file in files)
+        {
+            await using var stream = await file.OpenReadAsync();
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var data = ms.ToArray();
+
+            var attachment = new StagedAttachment
+            {
+                FileName = file.Name,
+                Data = data,
+                MimeType = GetMimeType(file.Name)
+            };
+            attachment.GeneratePreview();
+            StagedAttachments.Add(attachment);
+            
+        }
+    }
+    
+    [RelayCommand]
+    private void RemoveStagedAttachment(StagedAttachment attachment)
+    {
+        StagedAttachments.Remove(attachment);
+    }
+    
+    public async Task StageFilesAsync(IEnumerable<IStorageFile> files)
+    {
+        foreach (var file in files)
+        {
+            await using var stream = await file.OpenReadAsync();
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            var attachment = new StagedAttachment
+            {
+                FileName = file.Name,
+                Data = ms.ToArray(),
+                MimeType = GetMimeType(file.Name)
+            };
+            attachment.GeneratePreview();
+            StagedAttachments.Add(attachment);
+        }
     }
 }

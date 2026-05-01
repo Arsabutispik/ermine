@@ -1,7 +1,10 @@
 ﻿    using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Avalonia.Platform.Storage;
     using CommunityToolkit.Mvvm.ComponentModel;
     using CommunityToolkit.Mvvm.Messaging;
+    using CommunityToolkit.Mvvm.Messaging.Messages;
     using Ermine.Models;
     using Serilog;
     using Velopack;       
@@ -12,6 +15,12 @@
     public record LoginSuccessMessage(string Token, string UserId);
 
     public record LogoutMessage;
+    
+    public class PickFilesMessage(FilePickerOpenOptions options) 
+        : AsyncRequestMessage<IReadOnlyList<IStorageFile>?>
+    {
+        public FilePickerOpenOptions Options { get; } = options;
+    }
 
     public partial class MainWindowViewModel : ViewModelBase
     {

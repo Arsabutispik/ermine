@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -223,20 +224,28 @@ public class ApiClient
         }
     }
     
-    public static async Task<Message?> SendMessageAsync(string channelId, string content)
+    public static async Task SendMessageAsync(string channelId, string? content, IList<string>? attachmentIds = null)
     {
-        var payload = new { content };
-        var response = await Http.PostAsJsonAsync($"{InstanceUrl}channels/{channelId}/messages", payload);
+        var body = new Dictionary<string, object>();
+        if (!string.IsNullOrEmpty(content))
+            body["content"] = content;
+        if (attachmentIds?.Count > 0)
+            body["attachments"] = attachmentIds;
 
-        if (response.IsSuccessStatusCode)
-        {
-            return await response.Content.ReadFromJsonAsync<Message>();
-        }
-        else
-        {
-            var error = await response.Content.ReadAsStringAsync();
-            Log.Error("Failed to send message: {Error}", error);
-            return null;
-        }
+        await Http.PostAsJsonAsync($"{InstanceUrl}/channels/{channelId}/messages", body);
+    }
+    public static async Task<string?> UploadAttachmentAsync(string fileName, byte[] data, string mimeType)
+    {
+        using var content = new MultipartFormDataContent();
+        using var fileContent = new ByteArrayContent(data);
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
+        content.Add(fileContent, "file", fileName);
+
+        var response = await Http.PostAsync($"{AutumnUrl}/attachments", content);
+        if (!response.IsSuccessStatusCode) return null;
+
+        var json = await response.Content.ReadAsStringAsync();
+        var doc = JsonDocument.Parse(json);
+        return doc.RootElement.GetProperty("id").GetString();
     }
 }
