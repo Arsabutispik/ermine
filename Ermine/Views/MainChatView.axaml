@@ -8,9 +8,9 @@
              x:Class="Ermine.Views.MainChatView"
              x:DataType="vm:MainChatViewModel"
              DragDrop.AllowDrop="True">
-    
+
     <UserControl.Resources>
-        <converters:ChannelSelectionConverter x:Key="ChannelSelectionConverter"/>
+        <converters:ChannelSelectionConverter x:Key="ChannelSelectionConverter" />
     </UserControl.Resources>
 
     <Grid ColumnDefinitions="64, 240, *">
@@ -49,8 +49,8 @@
                                    Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality" />
                         </Border>
                     </Button>
-                    
-                    <Border Height="2" Width="32" Background="#003e49" Margin="0,8,0,0" CornerRadius="1"/>
+
+                    <Border Height="2" Width="32" Background="#003e49" Margin="0,8,0,0" CornerRadius="1" />
                 </StackPanel>
 
                 <ScrollViewer Grid.Row="1">
@@ -81,7 +81,7 @@
                                                        Height="0"
                                                        Opacity="0"
                                                        RadiusX="2" RadiusY="2"
-                                                       Margin="-6,0,0,0"/>
+                                                       Margin="-6,0,0,0" />
                                         </Panel>
                                     </ControlTemplate>
                                 </Setter>
@@ -106,8 +106,8 @@
                             <Style Selector="Rectangle#Indicator">
                                 <Setter Property="Transitions">
                                     <Transitions>
-                                        <DoubleTransition Property="Height" Duration="0:0:0.2" Easing="CubicEaseOut"/>
-                                        <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+                                        <DoubleTransition Property="Height" Duration="0:0:0.2" Easing="CubicEaseOut" />
+                                        <DoubleTransition Property="Opacity" Duration="0:0:0.2" />
                                     </Transitions>
                                 </Setter>
                             </Style>
@@ -145,309 +145,333 @@
             </Grid>
         </Border>
 
-        <Border Grid.Column="1" Background="#2a233a" 
+        <Border Grid.Column="1" Background="#2a233a"
                 BorderBrush="#003e49" BorderThickness="0,0,1,0">
             <Panel>
-                <Grid RowDefinitions="120, *" IsVisible="{Binding SelectedServer, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    
+                <Grid RowDefinitions="120, *"
+                      IsVisible="{Binding SelectedServer, Converter={x:Static ObjectConverters.IsNotNull}}">
+
                     <Border Grid.Row="0" BorderBrush="#003e49" BorderThickness="0,0,0,1">
-                    <Panel>
-                        <Image asyncImageLoader:ImageLoader.Source="{Binding SelectedServer.BannerUrl}"
-                               Stretch="UniformToFill" />
+                        <Panel>
+                            <Image asyncImageLoader:ImageLoader.Source="{Binding SelectedServer.BannerUrl}"
+                                   Stretch="UniformToFill" />
 
-                        <Border>
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                    <GradientStop Color="#002a233a" Offset="0.0" />
-                                    <GradientStop Color="#aa2a233a" Offset="0.6" />
-                                    <GradientStop Color="#ff2a233a" Offset="1.0" />
-                                </LinearGradientBrush>
-                            </Border.Background>
-                        </Border>
+                            <Border>
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                        <GradientStop Color="#002a233a" Offset="0.0" />
+                                        <GradientStop Color="#aa2a233a" Offset="0.6" />
+                                        <GradientStop Color="#ff2a233a" Offset="1.0" />
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
 
-                        <TextBlock Text="{Binding SelectedServer.Name}"
-                                   FontWeight="Bold"
-                                   FontSize="16"
-                                   Foreground="#ffffff"
-                                   Margin="16,0,16,12"
-                                   VerticalAlignment="Bottom"
-                                   HorizontalAlignment="Left" />
-                    </Panel>
-                </Border>
-                
-                <ScrollViewer Grid.Row="1">
-                    <ScrollViewer.Styles>
-                        <Style Selector="RadioButton.ChannelItem">
-                            <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="Foreground" Value="#949BA4"/> <Setter Property="CornerRadius" Value="4"/>
-                            <Setter Property="Margin" Value="12,1,8,1"/> <Setter Property="HorizontalAlignment" Value="Stretch"/>
-                            <Setter Property="Cursor" Value="Hand"/>
+                            <TextBlock Text="{Binding SelectedServer.Name}"
+                                       FontWeight="Bold"
+                                       FontSize="16"
+                                       Foreground="#ffffff"
+                                       Margin="16,0,16,12"
+                                       VerticalAlignment="Bottom"
+                                       HorizontalAlignment="Left" />
+                        </Panel>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1">
+                        <ScrollViewer.Styles>
+                            <Style Selector="RadioButton.ChannelItem">
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="Foreground" Value="#949BA4" />
+                                <Setter Property="CornerRadius" Value="4" />
+                                <Setter Property="Margin" Value="12,1,8,1" />
+                                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                                <Setter Property="Cursor" Value="Hand" />
+                                <Setter Property="Template">
+                                    <ControlTemplate>
+                                        <Border Background="{TemplateBinding Background}"
+                                                CornerRadius="{TemplateBinding CornerRadius}">
+                                            <ContentPresenter Content="{TemplateBinding Content}"
+                                                              Margin="8,6"
+                                                              VerticalAlignment="Center" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter>
+                                <Setter Property="Transitions">
+                                    <Transitions>
+                                        <BrushTransition Property="Background" Duration="0:0:0.1" />
+                                        <BrushTransition Property="Foreground" Duration="0:0:0.1" />
+                                    </Transitions>
+                                </Setter>
+                            </Style>
+
+                            <Style Selector="RadioButton.ChannelItem:pointerover">
+                                <Setter Property="Foreground" Value="#ffffff" />
+                                <Setter Property="Background" Value="#00493e" />
+                            </Style>
+                            <Style Selector="RadioButton.ChannelItem:checked">
+                                <Setter Property="Foreground" Value="#00d8ff" />
+                                <Setter Property="Background" Value="#003e49" />
+                            </Style>
+                        </ScrollViewer.Styles>
+
+                        <ItemsControl ItemsSource="{Binding ServerChannelGroups}" Margin="0,12,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:ChannelGroup">
+                                    <StackPanel Margin="0,0,0,12">
+
+                                        <ToggleButton IsChecked="{Binding IsExpanded}"
+                                                      IsVisible="{Binding IsCategory}"
+                                                      Background="Transparent"
+                                                      Padding="8,6"
+                                                      Margin="8,0"
+                                                      HorizontalAlignment="Stretch"
+                                                      HorizontalContentAlignment="Stretch"
+                                                      Cursor="Hand">
+                                            <ToggleButton.Styles>
+                                                <Style Selector="ToggleButton">
+                                                    <Setter Property="Template">
+                                                        <ControlTemplate>
+                                                            <Border Background="{TemplateBinding Background}"
+                                                                    CornerRadius="4"
+                                                                    Padding="{TemplateBinding Padding}">
+                                                                <StackPanel Orientation="Horizontal"
+                                                                            VerticalAlignment="Center">
+
+                                                                    <TextBlock Text="{Binding CategoryName}"
+                                                                               FontWeight="ExtraBold"
+                                                                               FontSize="12"
+                                                                               Foreground="#d1d5db"
+                                                                               VerticalAlignment="Center" />
+
+                                                                    <Path Data="M 0,0 L 4,4 L 0,8"
+                                                                          Stroke="#d1d5db"
+                                                                          StrokeThickness="2"
+                                                                          StrokeLineCap="Round"
+                                                                          StrokeJoin="Round"
+                                                                          Width="6" Height="10"
+                                                                          VerticalAlignment="Center"
+                                                                          Margin="8,0,0,0"
+                                                                          RenderTransformOrigin="50%,50%">
+                                                                        <Path.Styles>
+                                                                            <Style Selector="Path">
+                                                                                <Setter Property="RenderTransform"
+                                                                                    Value="rotate(0deg)" />
+                                                                                <Setter Property="Transitions">
+                                                                                    <Transitions>
+                                                                                        <TransformOperationsTransition
+                                                                                            Property="RenderTransform"
+                                                                                            Duration="0:0:0.15"
+                                                                                            Easing="CubicEaseOut" />
+                                                                                        <BrushTransition
+                                                                                            Property="Stroke"
+                                                                                            Duration="0:0:0.15" />
+                                                                                    </Transitions>
+                                                                                </Setter>
+                                                                            </Style>
+                                                                            <Style
+                                                                                Selector="ToggleButton:checked /template/ Path">
+                                                                                <Setter Property="RenderTransform"
+                                                                                    Value="rotate(90deg)" />
+                                                                            </Style>
+                                                                        </Path.Styles>
+                                                                    </Path>
+
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter>
+                                                </Style>
+
+                                                <Style Selector="ToggleButton:pointerover /template/ TextBlock">
+                                                    <Setter Property="Foreground" Value="#ffffff" />
+                                                </Style>
+                                                <Style Selector="ToggleButton:pointerover /template/ Path">
+                                                    <Setter Property="Stroke" Value="#ffffff" />
+                                                </Style>
+                                            </ToggleButton.Styles>
+                                        </ToggleButton>
+                                        <ItemsControl ItemsSource="{Binding Channels}"
+                                                      IsVisible="{Binding IsExpanded}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="models:Channel">
+
+                                                    <RadioButton Classes="ChannelItem"
+                                                                 GroupName="ServerChannels"
+                                                                 Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).SelectChannelCommand}"
+                                                                 CommandParameter="{Binding}">
+
+                                                        <RadioButton.IsChecked>
+                                                            <MultiBinding
+                                                                Converter="{StaticResource ChannelSelectionConverter}"
+                                                                Mode="OneWay">
+                                                                <Binding />
+                                                                <Binding
+                                                                    Path="$parent[UserControl].((vm:MainChatViewModel)DataContext).SelectedChannel" />
+                                                            </MultiBinding>
+                                                        </RadioButton.IsChecked>
+
+                                                        <StackPanel Orientation="Horizontal" Spacing="6"
+                                                                    VerticalAlignment="Center">
+                                                            <TextBlock Text="#" VerticalAlignment="Center" />
+
+                                                            <Border Width="18" Height="18"
+                                                                    ClipToBounds="True"
+                                                                    CornerRadius="4"
+                                                                    IsVisible="{Binding IconUrl, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                                <Image
+                                                                    asyncImageLoader:ImageLoader.Source="{Binding IconUrl}"
+                                                                    Stretch="UniformToFill"
+                                                                    RenderOptions.BitmapInterpolationMode="HighQuality" />
+                                                            </Border>
+
+                                                            <TextBlock Text="{Binding DisplayName}"
+                                                                       VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </RadioButton>
+
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                </Grid>
+
+                <Grid RowDefinitions="*"
+                      IsVisible="{Binding SelectedServer, Converter={x:Static ObjectConverters.IsNull}}">
+
+                    <Grid.Styles>
+                        <Style Selector="RadioButton.DMItem, Button.DMItem">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="Foreground" Value="#949BA4" />
+                            <Setter Property="CornerRadius" Value="8" />
+                            <Setter Property="Margin" Value="4,1" />
+                            <Setter Property="Padding" Value="6,4" />
+                            <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Cursor" Value="Hand" />
                             <Setter Property="Template">
                                 <ControlTemplate>
                                     <Border Background="{TemplateBinding Background}"
-                                            CornerRadius="{TemplateBinding CornerRadius}">
+                                            CornerRadius="{TemplateBinding CornerRadius}"
+                                            Padding="{TemplateBinding Padding}">
                                         <ContentPresenter Content="{TemplateBinding Content}"
-                                                          Margin="8,6"
-                                                          VerticalAlignment="Center"/>
+                                                          VerticalAlignment="Center" />
                                     </Border>
                                 </ControlTemplate>
                             </Setter>
                             <Setter Property="Transitions">
                                 <Transitions>
-                                    <BrushTransition Property="Background" Duration="0:0:0.1"/>
-                                    <BrushTransition Property="Foreground" Duration="0:0:0.1"/>
+                                    <BrushTransition Property="Background" Duration="0:0:0.1" />
+                                    <BrushTransition Property="Foreground" Duration="0:0:0.1" />
                                 </Transitions>
                             </Setter>
                         </Style>
-                        
-                        <Style Selector="RadioButton.ChannelItem:pointerover">
-                            <Setter Property="Foreground" Value="#ffffff"/>
-                            <Setter Property="Background" Value="#00493e"/>
+                        <Style Selector="RadioButton.DMItem:pointerover, Button.DMItem:pointerover">
+                            <Setter Property="Background" Value="#05ffffff" />
+                            <Setter Property="Foreground" Value="#ffffff" />
                         </Style>
-                        <Style Selector="RadioButton.ChannelItem:checked">
-                            <Setter Property="Foreground" Value="#00d8ff"/>
-                            <Setter Property="Background" Value="#003e49"/>
+                        <Style Selector="RadioButton.DMItem:checked">
+                            <Setter Property="Foreground" Value="#ffffff" />
+                            <Setter Property="Background" Value="#4d5382" />
                         </Style>
-                    </ScrollViewer.Styles>
+                    </Grid.Styles>
 
-                    <ItemsControl ItemsSource="{Binding ServerChannelGroups}" Margin="0,12,0,0">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="models:ChannelGroup">
-                                <StackPanel Margin="0,0,0,12">
-                                    
-                                    <ToggleButton IsChecked="{Binding IsExpanded}"
-                                                  IsVisible="{Binding IsCategory}"
-                                                  Background="Transparent"
-                                                  Padding="8,6"
-                                                  Margin="8,0"
-                                                  HorizontalAlignment="Stretch"
-                                                  HorizontalContentAlignment="Stretch"
-                                                  Cursor="Hand">
-                                        <ToggleButton.Styles>
-                                            <Style Selector="ToggleButton">
-                                                <Setter Property="Template">
-                                                    <ControlTemplate>
-                                                        <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
-                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                                
-                                                                <TextBlock Text="{Binding CategoryName}"
-                                                                           FontWeight="ExtraBold"
-                                                                           FontSize="12"
-                                                                           Foreground="#d1d5db"
-                                                                           VerticalAlignment="Center"/>
+                    <ScrollViewer Grid.Row="0">
+                        <StackPanel Margin="0,16,0,4">
+                            <TextBlock Text="Conversations"
+                                       FontWeight="Bold"
+                                       FontSize="15"
+                                       Foreground="#ffffff"
+                                       Margin="8,0,0,10" />
 
-                                                                <Path Data="M 0,0 L 4,4 L 0,8" 
-                                                                      Stroke="#d1d5db" 
-                                                                      StrokeThickness="2"
-                                                                      StrokeLineCap="Round"
-                                                                      StrokeJoin="Round"
-                                                                      Width="6" Height="10"
-                                                                      VerticalAlignment="Center"
-                                                                      Margin="8,0,0,0" 
-                                                                      RenderTransformOrigin="50%,50%">
-                                                                    <Path.Styles>
-                                                                        <Style Selector="Path">
-                                                                            <Setter Property="RenderTransform" Value="rotate(0deg)"/>
-                                                                            <Setter Property="Transitions">
-                                                                                <Transitions>
-                                                                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" Easing="CubicEaseOut"/>
-                                                                                    <BrushTransition Property="Stroke" Duration="0:0:0.15"/>
-                                                                                </Transitions>
-                                                                            </Setter>
-                                                                        </Style>
-                                                                        <Style Selector="ToggleButton:checked /template/ Path">
-                                                                            <Setter Property="RenderTransform" Value="rotate(90deg)"/>
-                                                                        </Style>
-                                                                    </Path.Styles>
-                                                                </Path>
-                                                                
-                                                            </StackPanel>
-                                                        </Border>
-                                                    </ControlTemplate>
-                                                </Setter>
-                                            </Style>
-                                            
-                                            <Style Selector="ToggleButton:pointerover /template/ TextBlock">
-                                                <Setter Property="Foreground" Value="#ffffff"/>
-                                            </Style>
-                                            <Style Selector="ToggleButton:pointerover /template/ Path">
-                                                <Setter Property="Stroke" Value="#ffffff"/>
-                                            </Style>
-                                        </ToggleButton.Styles>
-                                    </ToggleButton>
-                                    <ItemsControl ItemsSource="{Binding Channels}" 
-                                                  IsVisible="{Binding IsExpanded}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="models:Channel">
-                                                
-                                                <RadioButton Classes="ChannelItem"
-                                                             GroupName="ServerChannels"
-                                                             Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).SelectChannelCommand}"
-                                                             CommandParameter="{Binding}">
-    
-                                                    <RadioButton.IsChecked>
-                                                        <MultiBinding Converter="{StaticResource ChannelSelectionConverter}" Mode="OneWay">
-                                                            <Binding /> 
-                                                            <Binding Path="$parent[UserControl].((vm:MainChatViewModel)DataContext).SelectedChannel" />
-                                                        </MultiBinding>
-                                                    </RadioButton.IsChecked>
-
-                                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                                        <TextBlock Text="#" VerticalAlignment="Center"/>
-
-                                                        <Border Width="18" Height="18"
-                                                                ClipToBounds="True"
-                                                                CornerRadius="4"
-                                                                IsVisible="{Binding IconUrl, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                                            <Image asyncImageLoader:ImageLoader.Source="{Binding IconUrl}"
-                                                                   Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality" />
-                                                        </Border>
-
-                                                        <TextBlock Text="{Binding DisplayName}"
-                                                                   VerticalAlignment="Center"/>
-                                                    </StackPanel>
-                                                </RadioButton>
-                                                             
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                    
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-                
-                </Grid>
-
-                <Grid RowDefinitions="*"
-      IsVisible="{Binding SelectedServer, Converter={x:Static ObjectConverters.IsNull}}">
-
-    <Grid.Styles>
-        <Style Selector="RadioButton.DMItem, Button.DMItem">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#949BA4"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Margin" Value="4,1"/>
-            <Setter Property="Padding" Value="6,4"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <ControlTemplate>
-                    <Border Background="{TemplateBinding Background}"
-                            CornerRadius="{TemplateBinding CornerRadius}"
-                            Padding="{TemplateBinding Padding}">
-                        <ContentPresenter Content="{TemplateBinding Content}" 
-                                          VerticalAlignment="Center"/>
-                    </Border>
-                </ControlTemplate>
-            </Setter>
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.1"/>
-                    <BrushTransition Property="Foreground" Duration="0:0:0.1"/>
-                </Transitions>
-            </Setter>
-        </Style>
-        <Style Selector="RadioButton.DMItem:pointerover, Button.DMItem:pointerover">
-            <Setter Property="Background" Value="#05ffffff"/>
-            <Setter Property="Foreground" Value="#ffffff"/>
-        </Style>
-        <Style Selector="RadioButton.DMItem:checked">
-            <Setter Property="Foreground" Value="#ffffff"/>
-            <Setter Property="Background" Value="#4d5382"/>
-        </Style>
-    </Grid.Styles>
-
-    <ScrollViewer Grid.Row="0">
-        <StackPanel Margin="0,16,0,4">
-            <TextBlock Text="Conversations"
-                       FontWeight="Bold"
-                       FontSize="15"
-                       Foreground="#ffffff"
-                       Margin="8,0,0,10"/>
-
-            <Button Classes="DMItem"
-                    Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).SelectChannelCommand}"
-                    CommandParameter="{Binding SavedNotesChannel}">
-                <Grid ColumnDefinitions="Auto, *" VerticalAlignment="Center">
-                    <Border Grid.Column="0" Width="32" Height="32"
-                            CornerRadius="8"
-                            Background="#003e49">
-                        <Viewbox Width="16" Height="16"
-                                 HorizontalAlignment="Center"
-                                 VerticalAlignment="Center">
-                            <Canvas Width="24" Height="24">
-                                <Path Data="M17 3H7C5.9 3 5 3.9 5 5V21L12 18L19 21V5C19 3.9 18.1 3 17 3Z"
-                                      Fill="#00ffd8"/>
-                            </Canvas>
-                        </Viewbox>
-                    </Border>
-                    <TextBlock Grid.Column="1" Text="Saved Notes"
-                               VerticalAlignment="Center"
-                               Margin="10,0,0,0"
-                               FontWeight="SemiBold"
-                               FontSize="14"
-                               Foreground="#d1d5db"/>
-                </Grid>
-            </Button>
-
-            <TextBlock Text="Direct Messages"
-                       FontWeight="Bold"
-                       FontSize="11"
-                       Foreground="#949BA4"
-                       Margin="8,10,0,4"/>
-
-            <ItemsControl ItemsSource="{Binding DirectMessages}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="models:Channel">
-                        <RadioButton Classes="DMItem"
-                                     GroupName="ServerChannels"
-                                     Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).SelectChannelCommand}"
-                                     CommandParameter="{Binding}">
-                            <RadioButton.IsChecked>
-                                <MultiBinding Converter="{StaticResource ChannelSelectionConverter}" Mode="OneWay">
-                                    <Binding />
-                                    <Binding Path="$parent[UserControl].((vm:MainChatViewModel)DataContext).SelectedChannel" />
-                                </MultiBinding>
-                            </RadioButton.IsChecked>
-
-                            <Grid ColumnDefinitions="Auto, *" VerticalAlignment="Center">
-                                <Panel Grid.Column="0" Width="32" Height="32">
-                                    <Border Width="32" Height="32"
-                                            ClipToBounds="True"
-                                            CornerRadius="16"
-                                            IsVisible="{Binding IconUrl, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                        <Image asyncImageLoader:ImageLoader.Source="{Binding IconUrl}"
-                                               Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                            <Button Classes="DMItem"
+                                    Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).SelectChannelCommand}"
+                                    CommandParameter="{Binding SavedNotesChannel}">
+                                <Grid ColumnDefinitions="Auto, *" VerticalAlignment="Center">
+                                    <Border Grid.Column="0" Width="32" Height="32"
+                                            CornerRadius="8"
+                                            Background="#003e49">
+                                        <Viewbox Width="16" Height="16"
+                                                 HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <Path
+                                                    Data="M17 3H7C5.9 3 5 3.9 5 5V21L12 18L19 21V5C19 3.9 18.1 3 17 3Z"
+                                                    Fill="#00ffd8" />
+                                            </Canvas>
+                                        </Viewbox>
                                     </Border>
-                                    <Border Width="32" Height="32"
-                                            ClipToBounds="True"
-                                            CornerRadius="16"
-                                            Background="#003e49"
-                                            IsVisible="{Binding IconUrl, Converter={x:Static ObjectConverters.IsNull}}">
-                                        <TextBlock Text="@"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   Foreground="#ffffff"
-                                                   FontSize="14"/>
-                                    </Border>
-                                </Panel>
-                                <TextBlock Grid.Column="1" Text="{Binding DisplayName}"
-                                           VerticalAlignment="Center"
-                                           Margin="10,0,0,0"
-                                           FontWeight="SemiBold"
-                                           FontSize="14"/>
-                            </Grid>
-                        </RadioButton>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </StackPanel>
-    </ScrollViewer>
-</Grid>
+                                    <TextBlock Grid.Column="1" Text="Saved Notes"
+                                               VerticalAlignment="Center"
+                                               Margin="10,0,0,0"
+                                               FontWeight="SemiBold"
+                                               FontSize="14"
+                                               Foreground="#d1d5db" />
+                                </Grid>
+                            </Button>
+
+                            <TextBlock Text="Direct Messages"
+                                       FontWeight="Bold"
+                                       FontSize="11"
+                                       Foreground="#949BA4"
+                                       Margin="8,10,0,4" />
+
+                            <ItemsControl ItemsSource="{Binding DirectMessages}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:Channel">
+                                        <RadioButton Classes="DMItem"
+                                                     GroupName="ServerChannels"
+                                                     Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).SelectChannelCommand}"
+                                                     CommandParameter="{Binding}">
+                                            <RadioButton.IsChecked>
+                                                <MultiBinding Converter="{StaticResource ChannelSelectionConverter}"
+                                                              Mode="OneWay">
+                                                    <Binding />
+                                                    <Binding
+                                                        Path="$parent[UserControl].((vm:MainChatViewModel)DataContext).SelectedChannel" />
+                                                </MultiBinding>
+                                            </RadioButton.IsChecked>
+
+                                            <Grid ColumnDefinitions="Auto, *" VerticalAlignment="Center">
+                                                <Panel Grid.Column="0" Width="32" Height="32">
+                                                    <Border Width="32" Height="32"
+                                                            ClipToBounds="True"
+                                                            CornerRadius="16"
+                                                            IsVisible="{Binding IconUrl, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                        <Image asyncImageLoader:ImageLoader.Source="{Binding IconUrl}"
+                                                               Stretch="UniformToFill"
+                                                               RenderOptions.BitmapInterpolationMode="HighQuality" />
+                                                    </Border>
+                                                    <Border Width="32" Height="32"
+                                                            ClipToBounds="True"
+                                                            CornerRadius="16"
+                                                            Background="#003e49"
+                                                            IsVisible="{Binding IconUrl, Converter={x:Static ObjectConverters.IsNull}}">
+                                                        <TextBlock Text="@"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="#ffffff"
+                                                                   FontSize="14" />
+                                                    </Border>
+                                                </Panel>
+                                                <TextBlock Grid.Column="1" Text="{Binding DisplayName}"
+                                                           VerticalAlignment="Center"
+                                                           Margin="10,0,0,0"
+                                                           FontWeight="SemiBold"
+                                                           FontSize="14" />
+                                            </Grid>
+                                        </RadioButton>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
             </Panel>
         </Border>
 
@@ -458,325 +482,340 @@
                            VerticalAlignment="Center"
                            Foreground="#00ffd8"
                            Opacity="0.8"
-                           IsVisible="{Binding SelectedChannel, Converter={x:Static ObjectConverters.IsNull}}"/>
+                           IsVisible="{Binding SelectedChannel, Converter={x:Static ObjectConverters.IsNull}}" />
 
-                <Grid RowDefinitions="*, Auto" 
+                <Grid RowDefinitions="*, Auto"
                       IsVisible="{Binding SelectedChannel, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    
-                    <ListBox Grid.Row="0" 
-         Name="MessageList" 
-         ItemsSource="{Binding CurrentMessages}" 
-         Margin="0,0,0,10"
-         Padding="20,10"
-         Background="Transparent"
-         BorderThickness="0"
-         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-    
-    <ListBox.ItemsPanel>
-        <ItemsPanelTemplate>
-            <VirtualizingStackPanel VerticalAlignment="Bottom"/>
-        </ItemsPanelTemplate>
-    </ListBox.ItemsPanel>
-    
-    <ListBox.Styles>
-        <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Margin" Value="0" />
-            <Setter Property="Template">
-                <ControlTemplate>
-                    <ContentPresenter Name="PART_ContentPresenter"
-                                      Background="{TemplateBinding Background}"
-                                      Content="{TemplateBinding Content}"
-                                      ContentTemplate="{TemplateBinding ContentTemplate}"
-                                      Padding="{TemplateBinding Padding}"
-                                      Margin="{TemplateBinding Margin}"/>
-                </ControlTemplate>
-            </Setter>
-        </Style>
-        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#05ffffff" />
-        </Style>
-    </ListBox.Styles>
 
-<ListBox.ItemTemplate>
-    <DataTemplate x:DataType="models:Message">
-        <Grid RowDefinitions="Auto, *" Margin="10,4,10,4">
-            <Border Grid.RowSpan="2"
-                    Margin="-6,0,-6,0"
-                    CornerRadius="6"
-                    Background="#14369bff"
-                    IsVisible="{Binding MentionsCurrentUser}" />
-            
-            <Panel Grid.Row="0" 
-                   IsVisible="{Binding ResolvedReplies, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <ListBox Grid.Row="0"
+                             Name="MessageList"
+                             ItemsSource="{Binding CurrentMessages}"
+                             Margin="0,0,0,10"
+                             Padding="20,10"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
 
-                <ItemsControl ItemsSource="{Binding ResolvedReplies}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="models:Message">
-                            <Grid ColumnDefinitions="40, *" Background="Transparent">
-                                    
-                                <Border Grid.Column="0" 
-                                        Width="22" 
-                                        Height="16" 
-                                        BorderBrush="#4f545c" 
-                                        BorderThickness="2,2,0,0" 
-                                        CornerRadius="6,0,0,0" 
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Bottom"
-                                        Margin="19,8,0,0"
-                                        UseLayoutRounding="True" />
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel VerticalAlignment="Bottom" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
 
-                                <Button Grid.Column="1"
-                                        Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).JumpToMessageCommand}"
-                                        CommandParameter="{Binding}"
+                        <ListBox.Styles>
+                            <Style Selector="ListBoxItem">
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0" />
+                                <Setter Property="Template">
+                                    <ControlTemplate>
+                                        <ContentPresenter Name="PART_ContentPresenter"
+                                                          Background="{TemplateBinding Background}"
+                                                          Content="{TemplateBinding Content}"
+                                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                          Padding="{TemplateBinding Padding}"
+                                                          Margin="{TemplateBinding Margin}" />
+                                    </ControlTemplate>
+                                </Setter>
+                            </Style>
+                            <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="#05ffffff" />
+                            </Style>
+                        </ListBox.Styles>
+
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:Message">
+                                <Grid RowDefinitions="Auto, *" Margin="10,4,10,4">
+                                    <Border Grid.RowSpan="2"
+                                            Margin="-6,0,-6,0"
+                                            CornerRadius="6"
+                                            Background="#14369bff"
+                                            IsVisible="{Binding MentionsCurrentUser}" />
+
+                                    <Panel Grid.Row="0"
+                                           IsVisible="{Binding ResolvedReplies, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+                                        <ItemsControl ItemsSource="{Binding ResolvedReplies}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="models:Message">
+                                                    <Grid ColumnDefinitions="40, *" Background="Transparent">
+
+                                                        <Border Grid.Column="0"
+                                                                Width="22"
+                                                                Height="16"
+                                                                BorderBrush="#4f545c"
+                                                                BorderThickness="2,2,0,0"
+                                                                CornerRadius="6,0,0,0"
+                                                                HorizontalAlignment="Left"
+                                                                VerticalAlignment="Bottom"
+                                                                Margin="19,8,0,0"
+                                                                UseLayoutRounding="True" />
+
+                                                        <Button Grid.Column="1"
+                                                                Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).JumpToMessageCommand}"
+                                                                CommandParameter="{Binding}"
+                                                                Background="Transparent"
+                                                                BorderThickness="0"
+                                                                Padding="4,2"
+                                                                Cursor="Hand"
+                                                                Margin="2,2"
+                                                                HorizontalAlignment="Stretch"
+                                                                HorizontalContentAlignment="Stretch">
+                                                            <Button.Styles>
+                                                                <Style
+                                                                    Selector="Button:pointerover /template/ ContentPresenter">
+                                                                    <Setter Property="Background" Value="#0Affffff" />
+                                                                    <Setter Property="Opacity" Value="0.9" />
+                                                                </Style>
+                                                            </Button.Styles>
+
+                                                            <Grid ColumnDefinitions="Auto, Auto, *">
+                                                                <Border Grid.Column="0" Width="20" Height="20"
+                                                                        CornerRadius="10" ClipToBounds="True"
+                                                                        Background="#003e49" Margin="0,0,3,0">
+                                                                    <Image
+                                                                        asyncImageLoader:ImageLoader.Source="{Binding DisplayAvatarUrl}"
+                                                                        Stretch="UniformToFill"
+                                                                        RenderOptions.BitmapInterpolationMode="HighQuality" />
+                                                                </Border>
+
+                                                                <TextBlock Grid.Column="1"
+                                                                           Text="{Binding DisplayAuthorName}"
+                                                                           FontWeight="Bold"
+                                                                           Foreground="#d1d5db"
+                                                                           FontSize="13"
+                                                                           Margin="0,0,8,0"
+                                                                           VerticalAlignment="Center" />
+
+                                                                <SelectableTextBlock Grid.Column="2"
+                                                                        behaviors:MessageContentBehavior.FormattedMessage="{Binding}"
+                                                                        Foreground="#949BA4"
+                                                                        FontSize="13"
+                                                                        TextTrimming="CharacterEllipsis"
+                                                                        VerticalAlignment="Center" />
+                                                            </Grid>
+                                                        </Button>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Panel>
+
+                                    <Grid Grid.Row="1" ColumnDefinitions="40, *">
+
+                                        <Panel Grid.Column="0" VerticalAlignment="Top">
+                                            <Rectangle Width="2"
+                                                       Fill="#4f545c"
+                                                       HorizontalAlignment="Left"
+                                                       VerticalAlignment="Top"
+                                                       Height="12"
+                                                       Margin="19,0,0,0"
+                                                       UseLayoutRounding="True"
+                                                       IsVisible="{Binding ResolvedReplies, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+                                            <Border Width="40" Height="40"
+                                                    CornerRadius="20" ClipToBounds="True"
+                                                    VerticalAlignment="Top" Background="#003e49">
+                                                <Image asyncImageLoader:ImageLoader.Source="{Binding DisplayAvatarUrl}"
+                                                       Stretch="UniformToFill"
+                                                       RenderOptions.BitmapInterpolationMode="HighQuality" />
+                                            </Border>
+                                        </Panel>
+
+                                        <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="{Binding DisplayAuthorName}"
+                                                           FontWeight="Bold"
+                                                           Foreground="#ffffff" />
+                                                <TextBlock Text="{Binding Edited, StringFormat='{}{0:g}'}"
+                                                           Foreground="#949BA4"
+                                                           FontSize="12"
+                                                           VerticalAlignment="Bottom" />
+                                            </StackPanel>
+
+                                            <SelectableTextBlock
+                                                behaviors:MessageContentBehavior.FormattedMessage="{Binding}"
+                                                Foreground="#d1d5db"
+                                                TextWrapping="Wrap"
+                                                Margin="0,0,0,0"
+                                                IsVisible="{Binding Content, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                                            <ItemsControl ItemsSource="{Binding Attachments}" Margin="0,8,0,0">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="models:Attachment">
+                                                        <Border CornerRadius="8"
+                                                                ClipToBounds="True"
+                                                                Margin="0,0,0,8"
+                                                                HorizontalAlignment="Left"
+                                                                IsVisible="{Binding IsImage}"
+                                                                Width="{Binding DisplayWidth}"
+                                                                Height="{Binding DisplayHeight}">
+                                                            <Image
+                                                                asyncImageLoader:ImageLoader.Source="{Binding ThumbnailUrl}"
+                                                                Stretch="Uniform" />
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Border Grid.Row="1" Background="#383145" CornerRadius="8" Margin="20,0,20,20">
+                        <Grid RowDefinitions="Auto, Auto">
+
+                            <!-- Staged attachments preview -->
+                            <ItemsControl Grid.Row="0"
+                                          ItemsSource="{Binding StagedAttachments}"
+                                          IsVisible="{Binding !!StagedAttachments.Count}"
+                                          Margin="12,12,12,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:StagedAttachment">
+                                        <Border Background="#2a233a"
+                                                CornerRadius="8"
+                                                Margin="0,0,10,10"
+                                                Width="100"
+                                                Height="120"
+                                                ClipToBounds="True"
+                                                BoxShadow="0 4 8 0 #40000000">
+                                            <Grid RowDefinitions="*, Auto">
+
+                                                <!-- Preview Image Area -->
+                                                <Panel Grid.Row="0" Background="#1a1a1a">
+                                                    <!-- Image Preview -->
+                                                    <Image Source="{Binding PreviewBitmap}"
+                                                           Stretch="UniformToFill"
+                                                           IsVisible="{Binding PreviewBitmap, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+                                                    <!-- File Icon Fallback (for non-images) -->
+                                                    <Viewbox Width="32" Height="32"
+                                                             Opacity="0.5"
+                                                             IsVisible="{Binding PreviewBitmap, Converter={x:Static ObjectConverters.IsNull}}">
+                                                        <Path
+                                                            Data="M14,2H6C4.89,2 4,2.89 4,4V20C4,21.11 4.89,22 6,22H18C19.11,22 20,21.11 20,20V8L14,2M18,20H6V4H13V9H18V20Z"
+                                                            Fill="#ffffff" />
+                                                    </Viewbox>
+
+                                                    <!-- Close Button (Floating) -->
+                                                    <Button
+                                                        Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).RemoveStagedAttachmentCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                        Margin="4" Width="20" Height="20"
+                                                        CornerRadius="10"
+                                                        Background="#aa000000"
+                                                        Padding="0" MinWidth="0" MinHeight="0">
+                                                        <TextBlock Text="✕" FontSize="10" Foreground="White"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center" />
+                                                    </Button>
+                                                </Panel>
+
+                                                <!-- File Name Strip -->
+                                                <Border Grid.Row="1" Background="#383145" Padding="4,2">
+                                                    <TextBlock Text="{Binding FileName}"
+                                                               Foreground="#d1d5db"
+                                                               FontSize="10"
+                                                               HorizontalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto">
+
+                                <!-- Attachment Button -->
+                                <Button Grid.Column="0"
+                                        Command="{Binding PickAttachmentCommand}"
                                         Background="Transparent"
                                         BorderThickness="0"
-                                        Padding="4,2"
+                                        Width="32" Height="32"
+                                        CornerRadius="16"
                                         Cursor="Hand"
-                                        Margin="2,2"
-                                        HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Stretch">
+                                        VerticalAlignment="Bottom"
+                                        Margin="8,8,0,8">
                                     <Button.Styles>
                                         <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                            <Setter Property="Background" Value="#0Affffff"/>
-                                            <Setter Property="Opacity" Value="0.9"/>
+                                            <Setter Property="Background" Value="#1Affffff" />
                                         </Style>
                                     </Button.Styles>
-                                    
-                                    <Grid ColumnDefinitions="Auto, Auto, *">
-                                        <Border Grid.Column="0" Width="20" Height="20" CornerRadius="10" ClipToBounds="True" Background="#003e49" Margin="0,0,3,0">
-                                            <Image asyncImageLoader:ImageLoader.Source="{Binding DisplayAvatarUrl}"
-                                                   Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality" />
-                                        </Border>
-                                        
-                                        <TextBlock Grid.Column="1" Text="{Binding DisplayAuthorName}" 
-                                                   FontWeight="Bold" 
-                                                   Foreground="#d1d5db" 
-                                                   FontSize="13" 
-                                                   Margin="0,0,8,0"
-                                                   VerticalAlignment="Center"/>
-                                        
-                                        <SelectableTextBlock Grid.Column="2" behaviors:MessageContentBehavior.FormattedMessage="{Binding}" 
-                                                             Foreground="#949BA4" 
-                                                             FontSize="13" 
-                                                             TextTrimming="CharacterEllipsis" 
-                                                             VerticalAlignment="Center"/>
-                                    </Grid>
+                                    <Viewbox Width="18" Height="18" HorizontalAlignment="Center"
+                                             VerticalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <Path
+                                                Data="M21.44 11.05L12.25 20.24C11.1 21.39 9.55 22.03 7.93 22.03C6.31 22.03 4.76 21.39 3.61 20.24C2.46 19.09 1.82 17.54 1.82 15.92C1.82 14.3 2.46 12.75 3.61 11.6L12.8 2.41C13.57 1.64 14.62 1.21 15.71 1.21C16.8 1.21 17.85 1.64 18.62 2.41C19.39 3.18 19.82 4.23 19.82 5.32C19.82 6.41 19.39 7.46 18.62 8.23L9.42 17.42C9.04 17.8 8.52 18.01 7.98 18.01C7.44 18.01 6.92 17.8 6.54 17.42C6.16 17.04 5.95 16.52 5.95 15.98C5.95 15.44 6.16 14.92 6.54 14.54L15.07 6.01"
+                                                Stroke="#b5bac1" StrokeThickness="2"
+                                                StrokeLineCap="Round" StrokeJoin="Round" />
+                                        </Canvas>
+                                    </Viewbox>
                                 </Button>
+
+                                <!-- Text Input -->
+                                <TextBox Grid.Column="1"
+                                         x:Name="InputTextBox"
+                                         Text="{Binding DraftMessage}"
+                                         PlaceholderText="Message..."
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         Foreground="#ffffff"
+                                         CaretBrush="#ffffff"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         MaxHeight="150"
+                                         MinHeight="32"
+                                         Padding="8,8"
+                                         VerticalAlignment="Bottom"
+                                         VerticalContentAlignment="Top"
+                                         Margin="4,8,4,8">
+                                    <TextBox.Styles>
+                                        <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                                            <Setter Property="Background" Value="Transparent" />
+                                            <Setter Property="BorderBrush" Value="Transparent" />
+                                        </Style>
+                                        <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                                            <Setter Property="Background" Value="Transparent" />
+                                            <Setter Property="BorderThickness" Value="0" />
+                                        </Style>
+                                    </TextBox.Styles>
+                                    <TextBox.KeyBindings>
+                                        <KeyBinding Gesture="Enter" Command="{Binding SendMessageCommand}" />
+                                    </TextBox.KeyBindings>
+                                </TextBox>
+
+                                <!-- Send Button -->
+                                <Button Grid.Column="2"
+                                        Command="{Binding SendMessageCommand}"
+                                        Background="#00ffd8"
+                                        Foreground="#000000"
+                                        CornerRadius="6"
+                                        Height="32"
+                                        Margin="0,8,8,8"
+                                        Padding="16,0"
+                                        FontWeight="Bold"
+                                        Cursor="Hand"
+                                        VerticalAlignment="Bottom"
+                                        VerticalContentAlignment="Center">
+                                    <Button.Styles>
+                                        <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                            <Setter Property="Background" Value="#33ffde" />
+                                        </Style>
+                                    </Button.Styles>
+                                    Send
+                                </Button>
+
                             </Grid>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </Panel>
-
-            <Grid Grid.Row="1" ColumnDefinitions="40, *">
-                
-                <Panel Grid.Column="0" VerticalAlignment="Top">
-                    <Rectangle Width="2" 
-                               Fill="#4f545c" 
-                               HorizontalAlignment="Left" 
-                               VerticalAlignment="Top" 
-                               Height="12" 
-                               Margin="19,0,0,0" 
-                               UseLayoutRounding="True"
-                               IsVisible="{Binding ResolvedReplies, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                    
-                    <Border Width="40" Height="40" 
-                            CornerRadius="20" ClipToBounds="True"
-                            VerticalAlignment="Top" Background="#003e49">
-                        <Image asyncImageLoader:ImageLoader.Source="{Binding DisplayAvatarUrl}"
-                               Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality" />
+                        </Grid>
                     </Border>
-                </Panel>
-
-                <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="{Binding DisplayAuthorName}" 
-                                   FontWeight="Bold" 
-                                   Foreground="#ffffff" />
-                        <TextBlock Text="{Binding Edited, StringFormat='{}{0:g}'}" 
-                                   Foreground="#949BA4" 
-                                   FontSize="12" 
-                                   VerticalAlignment="Bottom"/>
-                    </StackPanel>
-
-                    <SelectableTextBlock behaviors:MessageContentBehavior.FormattedMessage="{Binding}" 
-                                         Foreground="#d1d5db" 
-                                         TextWrapping="Wrap" 
-                                         Margin="0,0,0,0"
-                                         IsVisible="{Binding Content, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-
-                    <ItemsControl ItemsSource="{Binding Attachments}" Margin="0,8,0,0">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="models:Attachment">
-                                <Border CornerRadius="8"
-                                        ClipToBounds="True"
-                                        Margin="0,0,0,8"
-                                        HorizontalAlignment="Left"
-                                        IsVisible="{Binding IsImage}"
-                                        Width="{Binding DisplayWidth}"
-                                        Height="{Binding DisplayHeight}">
-                                    <Image asyncImageLoader:ImageLoader.Source="{Binding ThumbnailUrl}"
-                                           Stretch="Uniform"/>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </Grid>
-        </Grid>
-    </DataTemplate>
-</ListBox.ItemTemplate>
-</ListBox>
-
-<Border Grid.Row="1" Background="#383145" CornerRadius="8" Margin="20,0,20,20">
-    <Grid RowDefinitions="Auto, Auto">
-        
-        <!-- Staged attachments preview -->
-        <ItemsControl Grid.Row="0"
-                      ItemsSource="{Binding StagedAttachments}"
-                      IsVisible="{Binding !!StagedAttachments.Count}"
-                      Margin="12,12,12,0">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <WrapPanel/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-    <DataTemplate x:DataType="models:StagedAttachment">
-        <Border Background="#2a233a" 
-                CornerRadius="8" 
-                Margin="0,0,10,10" 
-                Width="100" 
-                Height="120" 
-                ClipToBounds="True"
-                BoxShadow="0 4 8 0 #40000000">
-            <Grid RowDefinitions="*, Auto">
-                
-                <!-- Preview Image Area -->
-                <Panel Grid.Row="0" Background="#1a1a1a">
-                    <!-- Image Preview -->
-                    <Image Source="{Binding PreviewBitmap}" 
-                           Stretch="UniformToFill"
-                           IsVisible="{Binding PreviewBitmap, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-                    
-                    <!-- File Icon Fallback (for non-images) -->
-                    <Viewbox Width="32" Height="32" 
-                             Opacity="0.5"
-                             IsVisible="{Binding PreviewBitmap, Converter={x:Static ObjectConverters.IsNull}}">
-                        <Path Data="M14,2H6C4.89,2 4,2.89 4,4V20C4,21.11 4.89,22 6,22H18C19.11,22 20,21.11 20,20V8L14,2M18,20H6V4H13V9H18V20Z" 
-                              Fill="#ffffff"/>
-                    </Viewbox>
-
-                    <!-- Close Button (Floating) -->
-                    <Button Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).RemoveStagedAttachmentCommand}"
-                            CommandParameter="{Binding}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top"
-                            Margin="4" Width="20" Height="20" 
-                            CornerRadius="10"
-                            Background="#aa000000"
-                            Padding="0" MinWidth="0" MinHeight="0">
-                        <TextBlock Text="✕" FontSize="10" Foreground="White" 
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Button>
-                </Panel>
-
-                <!-- File Name Strip -->
-                <Border Grid.Row="1" Background="#383145" Padding="4,2">
-                    <TextBlock Text="{Binding FileName}"
-                               Foreground="#d1d5db" 
-                               FontSize="10"
-                               HorizontalAlignment="Center"
-                               TextTrimming="CharacterEllipsis"/>
-                </Border>
-            </Grid>
-        </Border>
-    </DataTemplate>
-</ItemsControl.ItemTemplate>
-        </ItemsControl>
-
-        <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto">
-            
-            <!-- Attachment Button -->
-            <Button Grid.Column="0"
-                    Command="{Binding PickAttachmentCommand}"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Width="32" Height="32"
-                    CornerRadius="16"
-                    Cursor="Hand"
-                    VerticalAlignment="Bottom"
-                    Margin="8,8,0,8">
-                <Button.Styles>
-                    <Style Selector="Button:pointerover /template/ ContentPresenter">
-                        <Setter Property="Background" Value="#1Affffff"/>
-                    </Style>
-                </Button.Styles>
-                <Viewbox Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Canvas Width="24" Height="24">
-                        <Path Data="M21.44 11.05L12.25 20.24C11.1 21.39 9.55 22.03 7.93 22.03C6.31 22.03 4.76 21.39 3.61 20.24C2.46 19.09 1.82 17.54 1.82 15.92C1.82 14.3 2.46 12.75 3.61 11.6L12.8 2.41C13.57 1.64 14.62 1.21 15.71 1.21C16.8 1.21 17.85 1.64 18.62 2.41C19.39 3.18 19.82 4.23 19.82 5.32C19.82 6.41 19.39 7.46 18.62 8.23L9.42 17.42C9.04 17.8 8.52 18.01 7.98 18.01C7.44 18.01 6.92 17.8 6.54 17.42C6.16 17.04 5.95 16.52 5.95 15.98C5.95 15.44 6.16 14.92 6.54 14.54L15.07 6.01"
-                              Stroke="#b5bac1" StrokeThickness="2" 
-                              StrokeLineCap="Round" StrokeJoin="Round"/>
-                    </Canvas>
-                </Viewbox>
-            </Button>
-
-            <!-- Text Input -->
-            <TextBox Grid.Column="1"
-                     x:Name="InputTextBox"
-                     Text="{Binding DraftMessage}"
-                     PlaceholderText="Message..."
-                     Background="Transparent"
-                     BorderThickness="0"
-                     Foreground="#ffffff"
-                     CaretBrush="#ffffff"
-                     AcceptsReturn="True"
-                     TextWrapping="Wrap"
-                     MaxHeight="150"
-                     MinHeight="32"
-                     Padding="8,8"
-                     VerticalAlignment="Bottom"
-                     VerticalContentAlignment="Top"
-                     Margin="4,8,4,8">
-                <TextBox.Styles>
-                    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
-                        <Setter Property="Background" Value="Transparent"/>
-                        <Setter Property="BorderBrush" Value="Transparent"/>
-                    </Style>
-                    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
-                        <Setter Property="Background" Value="Transparent"/>
-                        <Setter Property="BorderThickness" Value="0"/>
-                    </Style>
-                </TextBox.Styles>
-                <TextBox.KeyBindings>
-                    <KeyBinding Gesture="Enter" Command="{Binding SendMessageCommand}" />
-                    </TextBox.KeyBindings>
-            </TextBox>
-
-            <!-- Send Button -->
-            <Button Grid.Column="2"
-                    Command="{Binding SendMessageCommand}"
-                    Background="#00ffd8"
-                    Foreground="#000000"
-                    CornerRadius="6"
-                    Height="32"
-                    Margin="0,8,8,8"
-                    Padding="16,0"
-                    FontWeight="Bold"
-                    Cursor="Hand"
-                    VerticalAlignment="Bottom"
-                    VerticalContentAlignment="Center">
-                <Button.Styles>
-                    <Style Selector="Button:pointerover /template/ ContentPresenter">
-                        <Setter Property="Background" Value="#33ffde"/>
-                    </Style>
-                </Button.Styles>
-                Send
-            </Button>
-            
-        </Grid>
-    </Grid>
-</Border>
                 </Grid>
             </Panel>
         </Border>
