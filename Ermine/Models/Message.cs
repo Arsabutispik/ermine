@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Text.Json.Serialization;
 using Avalonia.Media.Imaging;
 
@@ -55,11 +57,21 @@ public record Message(
     //[property: JsonPropertyName("webhook")] MessageWebhook? = null
 )
 {
-    [JsonIgnore] public string DisplayAuthorName => Masquerade?.Name ?? User?.Username ?? Author;
+    [JsonIgnore]
+    public bool IsMentionReply { get; init; }
+
+    [JsonIgnore] public string DisplayAuthorName => (IsMentionReply ? "@" : "") + (Masquerade?.Name ?? User?.Username ?? Author);
     
     [JsonIgnore]
     public string? DisplayAvatarUrl => Masquerade?.Avatar ?? User?.AvatarUrl;
 
+
+    [JsonIgnore]
+    public bool MentionsCurrentUser =>
+        !string.IsNullOrEmpty(GlobalCache.CurrentUserId) &&
+        Mentions?.Contains(GlobalCache.CurrentUserId) == true;
+
     [JsonIgnore]
     public List<Message>? ResolvedReplies { get; set; }
+    
 }

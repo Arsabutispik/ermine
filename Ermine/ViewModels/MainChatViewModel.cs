@@ -92,6 +92,11 @@ public partial class MainChatViewModel : ViewModelBase
                 }
             }
 
+            if (incomingMessage.User != null)
+            {
+                GlobalCache.Users[incomingMessage.User.Id] = incomingMessage.User;
+            }
+
             if (incomingMessage.Replies?.Length > 0)
             {
                 var resolvedReplies = new List<Message>();
@@ -100,7 +105,8 @@ public partial class MainChatViewModel : ViewModelBase
                     var targetMsg = cached.FirstOrDefault(m => m.Id == replyId);
                     if (targetMsg != null)
                     {
-                        resolvedReplies.Add(targetMsg);
+                        var isMention = incomingMessage.Mentions != null && incomingMessage.Mentions.Contains(targetMsg.Author);
+                        resolvedReplies.Add(targetMsg with { IsMentionReply = isMention });
                     }
                 }
             

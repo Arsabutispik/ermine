@@ -202,6 +202,11 @@ public class ApiClient
             var userLookup = response.Users.ToDictionary(u => u.Id);
             var messageLookup = response.Messages.ToDictionary(m => m.Id);
 
+            foreach (var user in response.Users)
+            {
+                GlobalCache.Users[user.Id] = user;
+            }
+
             var mappedMessages = response.Messages.Select(msg =>
             {
                 userLookup.TryGetValue(msg.Author, out var matchedUser);
@@ -215,7 +220,8 @@ public class ApiClient
                         if (messageLookup.TryGetValue(replyId, out var rawReply))
                         {
                             userLookup.TryGetValue(rawReply.Author, out var replyUser);
-                            resolvedReplies.Add(rawReply with { User = replyUser });
+                            var isMention = msg.Mentions != null && msg.Mentions.Contains(rawReply.Author);
+                            resolvedReplies.Add(rawReply with { User = replyUser, IsMentionReply = isMention });
                         }
                     }
 

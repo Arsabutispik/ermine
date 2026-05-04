@@ -4,6 +4,7 @@
              xmlns:models="using:Ermine.Models"
              xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:converters="clr-namespace:Ermine.Converters"
+             xmlns:behaviors="using:Ermine.Behaviors"
              x:Class="Ermine.Views.MainChatView"
              x:DataType="vm:MainChatViewModel"
              DragDrop.AllowDrop="True">
@@ -500,6 +501,11 @@
 <ListBox.ItemTemplate>
     <DataTemplate x:DataType="models:Message">
         <Grid RowDefinitions="Auto, *" Margin="10,4,10,4">
+            <Border Grid.RowSpan="2"
+                    Margin="-6,0,-6,0"
+                    CornerRadius="6"
+                    Background="#14369bff"
+                    IsVisible="{Binding MentionsCurrentUser}" />
             
             <Panel Grid.Row="0" 
                    IsVisible="{Binding ResolvedReplies, Converter={x:Static ObjectConverters.IsNotNull}}">
@@ -538,7 +544,7 @@
                                     </Button.Styles>
                                     
                                     <Grid ColumnDefinitions="Auto, Auto, *">
-                                        <Border Grid.Column="0" Width="20" Height="20" CornerRadius="10" ClipToBounds="True" Background="#003e49" Margin="0,0,8,0">
+                                        <Border Grid.Column="0" Width="20" Height="20" CornerRadius="10" ClipToBounds="True" Background="#003e49" Margin="0,0,3,0">
                                             <Image asyncImageLoader:ImageLoader.Source="{Binding DisplayAvatarUrl}"
                                                    Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality" />
                                         </Border>
@@ -550,11 +556,11 @@
                                                    Margin="0,0,8,0"
                                                    VerticalAlignment="Center"/>
                                         
-                                        <TextBlock Grid.Column="2" Text="{Binding Content}" 
-                                                   Foreground="#949BA4" 
-                                                   FontSize="13" 
-                                                   TextTrimming="CharacterEllipsis" 
-                                                   VerticalAlignment="Center"/>
+                                        <SelectableTextBlock Grid.Column="2" behaviors:MessageContentBehavior.FormattedMessage="{Binding}" 
+                                                             Foreground="#949BA4" 
+                                                             FontSize="13" 
+                                                             TextTrimming="CharacterEllipsis" 
+                                                             VerticalAlignment="Center"/>
                                     </Grid>
                                 </Button>
                             </Grid>
@@ -594,11 +600,11 @@
                                    VerticalAlignment="Bottom"/>
                     </StackPanel>
 
-                    <TextBlock Text="{Binding Content}" 
-                               Foreground="#d1d5db" 
-                               TextWrapping="Wrap" 
-                               Margin="0,4,0,0"
-                               IsVisible="{Binding Content, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                    <SelectableTextBlock behaviors:MessageContentBehavior.FormattedMessage="{Binding}" 
+                                         Foreground="#d1d5db" 
+                                         TextWrapping="Wrap" 
+                                         Margin="0,0,0,0"
+                                         IsVisible="{Binding Content, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
                     <ItemsControl ItemsSource="{Binding Attachments}" Margin="0,8,0,0">
                         <ItemsControl.ItemTemplate>
