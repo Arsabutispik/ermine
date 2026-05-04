@@ -69,10 +69,24 @@ public partial class MainChatViewModel : ViewModelBase
 
     private void HandleLiveMessage(Message incomingMessage)
     {
-        if (SelectedChannel == null || incomingMessage.Channel != SelectedChannel.Id)
-            return;
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!_messageCache.TryGetValue(incomingMessage.Channel, out var cached))
+            {
+                cached = new ObservableCollection<Message>();
+                _messageCache[incomingMessage.Channel] = cached;
+            }
 
-        Dispatcher.UIThread.Post(() => { CurrentMessages.Add(incomingMessage); });
+            cached.Add(incomingMessage);
+
+            if (SelectedChannel != null && incomingMessage.Channel == SelectedChannel.Id)
+            {
+                if (!ReferenceEquals(CurrentMessages, cached))
+                {
+                    CurrentMessages.Add(incomingMessage);
+                }
+            }
+        });
     }
 
     private async void InitializeGateway(string token)
