@@ -25,6 +25,10 @@ public partial class MainChatViewModel : ViewModelBase
     
     private readonly Dictionary<string, ObservableCollection<Message>> _messageCache = new();
     private int _messageLoadVersion;
+    private readonly Dictionary<string, bool> _hasMoreMessages = new();
+    private readonly Dictionary<string, bool> _isFetchingOlder = new();
+    public record PrependingMessagesNotification;
+    public record PrependedMessagesNotification;
     
     private static string GetMimeType(string fileName) =>
         Path.GetExtension(fileName).ToLowerInvariant() switch
@@ -388,9 +392,50 @@ public partial class MainChatViewModel : ViewModelBase
 
         var collection = new ObservableCollection<Message>(messages);
         _messageCache[channelId] = collection;
+        _hasMoreMessages[channelId] = messages.Count >= 50;
+        _isFetchingOlder[channelId] = false;
 
         CurrentMessages = collection;
         OnPropertyChanged(nameof(CurrentMessages));
+    }
+    
+    public async Task FetchOlderMessagesAsync(string channelId)
+    {
+        if (_isFetchingOlder.GetValueOrDefault(channelId)) return;
+        if (!_hasMoreMessages.GetValueOrDefault(channelId, true)) return;
+        if (!_messageCache.TryGetValue(channelId, out var cached) || cached.Count == 0) return;
+
+        _isFetchingOlder[channelId] = true;
+        try
+        {
+            var oldestId = cached[0].Id;
+            var messages = await ApiClient.FetchMessagesAsync(channelId, beforeId: oldestId);
+
+            if (messages == null || messages.Count == 0)
+            {
+                _hasMoreMessages[channelId] = false;
+                return;
+            }
+
+            if (SelectedChannel?.Id != channelId) return;
+
+            Dispatcher.UIThread.Post(() =>
+                WeakReferenceMessenger.Default.Send(new PrependingMessagesNotification()));
+
+            messages.Reverse();
+            for (int i = 0; i < messages.Count; i++)
+                cached.Insert(i, messages[i]);
+
+            Dispatcher.UIThread.Post(() =>
+                WeakReferenceMessenger.Default.Send(new PrependedMessagesNotification()));
+
+            if (messages.Count < 50)
+                _hasMoreMessages[channelId] = false;
+        }
+        finally
+        {
+            _isFetchingOlder[channelId] = false;
+        }
     }
 
     private void LoadChannelsForSelectedServer()

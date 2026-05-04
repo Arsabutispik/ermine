@@ -188,10 +188,13 @@ public class ApiClient
     }
 
 
-    public static async Task<List<Message>?> FetchMessagesAsync(string channelId, int limit = 50)
+    public static async Task<List<Message>?> FetchMessagesAsync(string channelId, int limit = 50, string? beforeId = null)
     {
+        
         var url = $"/channels/{channelId}/messages?limit={limit}&include_users=true";
-
+        if (beforeId != null)
+            url += $"&before={beforeId}";
+        
         try
         {
             var response = await GetAsync<BulkMessageResponse>(url);
