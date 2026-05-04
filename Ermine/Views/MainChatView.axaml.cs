@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -22,6 +24,10 @@ namespace Ermine.Views;
 
 public partial class MainChatView : UserControl
 {
+    private MainChatViewModel? _boundViewModel;
+    private ObservableCollection<Message>? _boundMessages;
+    private ScrollViewer? _messageScrollViewer;
+    private bool _stickToBottom = true;
     public MainChatView()
     {
         InitializeComponent();  
@@ -37,33 +43,162 @@ public partial class MainChatView : UserControl
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
+        AttachToViewModel();
+        AttachToMessageScrollViewer();
+    }
 
-        if (DataContext is MainChatViewModel vm)
-        {
-            vm.CurrentMessages.CollectionChanged += OnMessagesChanged;
-        }
+    protected override void OnUnloaded(RoutedEventArgs e)
+    {
+        DetachFromMessageScrollViewer();
+        DetachFromViewModel();
+        base.OnUnloaded(e);
+    }
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+        AttachToViewModel();
     }
     private CancellationTokenSource? _scrollCts;
+
+    private void AttachToViewModel()
+    {
+        if (DataContext is not MainChatViewModel vm)
+            return;
+
+        if (ReferenceEquals(_boundViewModel, vm))
+        {
+            AttachToMessages(vm.CurrentMessages);
+            return;
+        }
+
+        DetachFromViewModel();
+        _boundViewModel = vm;
+        _boundViewModel.PropertyChanged += OnViewModelPropertyChanged;
+        AttachToMessages(vm.CurrentMessages);
+    }
+
+    private void DetachFromViewModel()
+    {
+        if (_boundViewModel != null)
+        {
+            _boundViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            _boundViewModel = null;
+        }
+
+        DetachFromMessages();
+    }
+
+    private void AttachToMessages(ObservableCollection<Message>? messages)
+    {
+        if (ReferenceEquals(_boundMessages, messages))
+            return;
+
+        DetachFromMessages();
+        _boundMessages = messages;
+
+        if (_boundMessages != null)
+            _boundMessages.CollectionChanged += OnMessagesChanged;
+    }
+
+    private void DetachFromMessages()
+    {
+        if (_boundMessages != null)
+        {
+            _boundMessages.CollectionChanged -= OnMessagesChanged;
+            _boundMessages = null;
+        }
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(MainChatViewModel.CurrentMessages) || _boundViewModel == null)
+            return;
+
+        AttachToMessages(_boundViewModel.CurrentMessages);
+        _stickToBottom = true;
+        ScrollToBottomAfterLayout(force: true);
+    }
 
     private void OnMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.Action != NotifyCollectionChangedAction.Add) return;
 
+        _stickToBottom = true;
+        ScrollToBottomAfterLayout(force: false);
+    }
+
+    private void AttachToMessageScrollViewer()
+    {
         var scrollViewer = MessageList.FindDescendantOfType<ScrollViewer>();
+        if (ReferenceEquals(_messageScrollViewer, scrollViewer))
+            return;
+
+        DetachFromMessageScrollViewer();
+        _messageScrollViewer = scrollViewer;
+
+        if (_messageScrollViewer != null)
+            _messageScrollViewer.ScrollChanged += OnMessageScrollChanged;
+    }
+
+    private void DetachFromMessageScrollViewer()
+    {
+        if (_messageScrollViewer != null)
+        {
+            _messageScrollViewer.ScrollChanged -= OnMessageScrollChanged;
+            _messageScrollViewer = null;
+        }
+    }
+
+    private void OnMessageScrollChanged(object? sender, ScrollChangedEventArgs e)
+    {
+        if (_messageScrollViewer == null)
+            return;
+
+        var isAtBottom = _messageScrollViewer.Offset.Y >= (_messageScrollViewer.Extent.Height - _messageScrollViewer.Viewport.Height - 20);
+
+        if (isAtBottom)
+        {
+            _stickToBottom = true;
+            return;
+        }
+
+        if (e.OffsetDelta.Y < 0)
+            _stickToBottom = false;
+    }
+
+    private void ScrollToBottomAfterLayout(bool force)
+    {
+        var scrollViewer = _messageScrollViewer ?? MessageList.FindDescendantOfType<ScrollViewer>();
         if (scrollViewer == null) return;
 
-        var isAtBottom = scrollViewer.Offset.Y >= (scrollViewer.Extent.Height - scrollViewer.Viewport.Height - 50);
-        if (!isAtBottom && scrollViewer.Extent.Height != 0) return;
+        if (!force && !_stickToBottom)
+        {
+            var isAtBottom = scrollViewer.Offset.Y >= (scrollViewer.Extent.Height - scrollViewer.Viewport.Height - 50);
+            if (!isAtBottom && scrollViewer.Extent.Height != 0) return;
+        }
 
         _scrollCts?.Cancel();
         _scrollCts = new CancellationTokenSource();
         var token = _scrollCts.Token;
 
-        Dispatcher.UIThread.Post(() =>
+        _ = ScrollToBottomAfterLayoutAsync(scrollViewer, token);
+    }
+
+    private static async Task ScrollToBottomAfterLayoutAsync(ScrollViewer scrollViewer, CancellationToken token)
+    {
+        try
         {
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Loaded);
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+
             if (!token.IsCancellationRequested)
                 scrollViewer.ScrollToEnd();
-        }, DispatcherPriority.Loaded);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error while scrolling message list to bottom");
+        }
     }
     private async Task<IReadOnlyList<IStorageFile>?> PickFilesAsync(FilePickerOpenOptions options)
     {

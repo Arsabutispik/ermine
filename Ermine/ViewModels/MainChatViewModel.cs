@@ -24,6 +24,7 @@ public partial class MainChatViewModel : ViewModelBase
     private readonly Dictionary<string, string> _serverChannelMemory = new();
     
     private readonly Dictionary<string, ObservableCollection<Message>> _messageCache = new();
+    private int _messageLoadVersion;
     
     private static string GetMimeType(string fileName) =>
         Path.GetExtension(fileName).ToLowerInvariant() switch
@@ -301,17 +302,34 @@ public partial class MainChatViewModel : ViewModelBase
 
     private async Task LoadMessagesAsync(string channelId)
     {
+        var loadVersion = ++_messageLoadVersion;
+
         if (_messageCache.TryGetValue(channelId, out var cached))
         {
+            if (loadVersion != _messageLoadVersion) return;
             CurrentMessages = cached;
             OnPropertyChanged(nameof(CurrentMessages));
             return;
         }
 
-        CurrentMessages.Clear();
+        if (loadVersion == _messageLoadVersion)
+        {
+            CurrentMessages = new ObservableCollection<Message>();
+            OnPropertyChanged(nameof(CurrentMessages));
+        }
 
         var messages = await ApiClient.FetchMessagesAsync(channelId);
-        if (messages == null || !messages.Any()) return;
+        if (loadVersion != _messageLoadVersion || SelectedChannel?.Id != channelId)
+            return;
+
+        if (messages == null || !messages.Any())
+        {
+            var emptyCollection = new ObservableCollection<Message>();
+            _messageCache[channelId] = emptyCollection;
+            CurrentMessages = emptyCollection;
+            OnPropertyChanged(nameof(CurrentMessages));
+            return;
+        }
 
         messages.Reverse();
 
@@ -354,17 +372,11 @@ public partial class MainChatViewModel : ViewModelBase
         }
 
         var uncategorizedGroup = new ChannelGroup { CategoryName = null };
-        if (SelectedServer.Channels != null)
+        foreach (var channelId in SelectedServer.Channels)
         {
-            foreach (var channelId in SelectedServer.Channels)
+            if (!categorizedChannelIds.Contains(channelId) && TryGetChannelById(channelId, out Channel channel))
             {
-                if (!categorizedChannelIds.Contains(channelId))
-                {
-                    if (TryGetChannelById(channelId, out Channel channel))
-                    {
-                        uncategorizedGroup.Channels.Add(channel);
-                    }
-                }
+                uncategorizedGroup.Channels.Add(channel);
             }
         }
 
