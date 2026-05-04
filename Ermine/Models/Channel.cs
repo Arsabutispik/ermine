@@ -61,8 +61,8 @@ public record Channel
     [JsonIgnore]
     public string? IconUrl => this switch
     {
-        TextChannel t => t.Icon != null ? $"{ApiClient.AutumnUrl}/icons/{t.Icon.Id}" : null,
-        Group g => g.Icon != null ? $"{ApiClient.AutumnUrl}/icons/{g.Icon.Id}" : null,
+        TextChannel t => t.Icon != null ? $"{ApiClient.AutumnUrl}/icons/{t.Icon.Id}?max_side=18" : null,
+        Group g => g.Icon != null ? $"{ApiClient.AutumnUrl}/icons/{g.Icon.Id}?max_side=44" : null,
         DirectMessageChannel d => GetDirectMessageIcon(d),
         _ => null
     };

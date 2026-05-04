@@ -534,7 +534,7 @@
                                         IsVisible="{Binding IsImage}"
                                         Width="{Binding DisplayWidth}"
                                         Height="{Binding DisplayHeight}">
-                                    <Image asyncImageLoader:ImageLoader.Source="{Binding Url}"
+                                    <Image asyncImageLoader:ImageLoader.Source="{Binding ThumbnailUrl}"
                                            Stretch="Uniform"/>
                                 </Border>
                             </DataTemplate>

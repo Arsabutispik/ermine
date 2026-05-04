@@ -58,7 +58,7 @@ public record User(
 )
 {
     [JsonIgnore]
-    public string? AvatarUrl => Avatar?.Url;
+    public string? AvatarUrl => $"{Avatar?.RawUrl}?max_side=64";
 
     /// <summary>
     /// Fetches the currently authenticated user.

@@ -25,7 +25,7 @@ public class App : Application
             "Ermine",
             "ImageCache");
 
-        ImageLoader.AsyncImageLoader = new LruDiskCachedImageLoader(cacheDirectory, maxEntries: 50);
+        ImageLoader.AsyncImageLoader = new LruDiskCachedImageLoader(cacheDirectory, maxBytes: 150L * 1024 * 1024);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             desktop.MainWindow = new MainWindow
