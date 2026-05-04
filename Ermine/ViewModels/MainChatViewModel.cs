@@ -50,6 +50,8 @@ public partial class MainChatViewModel : ViewModelBase
     public partial string DraftMessage { get; set; } = string.Empty;
     [ObservableProperty]
     public partial Channel? SelectedChannel { get; set; }
+    
+    public record ScrollToMessageRequest(Message Target);
 
     private bool _isRestoringState;
     [ObservableProperty]
@@ -76,7 +78,38 @@ public partial class MainChatViewModel : ViewModelBase
                 cached = new ObservableCollection<Message>();
                 _messageCache[incomingMessage.Channel] = cached;
             }
+            
+            if (incomingMessage.User == null && !string.IsNullOrEmpty(incomingMessage.Author))
+            {
+                var knownMessage = cached.FirstOrDefault(m => m.Author == incomingMessage.Author && m.User != null);
+                if (knownMessage != null)
+                {
+                    incomingMessage = incomingMessage with { User = knownMessage.User };
+                }
+                else
+                {
+                    // TODO: Fetch profile from API as the cache doesn't know about it
+                }
+            }
 
+            if (incomingMessage.Replies?.Length > 0)
+            {
+                var resolvedReplies = new List<Message>();
+                foreach (var replyId in incomingMessage.Replies)
+                {
+                    var targetMsg = cached.FirstOrDefault(m => m.Id == replyId);
+                    if (targetMsg != null)
+                    {
+                        resolvedReplies.Add(targetMsg);
+                    }
+                }
+            
+                if (resolvedReplies.Count > 0)
+                {
+                    incomingMessage.ResolvedReplies = resolvedReplies;
+                }
+            }
+            
             cached.Add(incomingMessage);
 
             if (SelectedChannel != null && incomingMessage.Channel == SelectedChannel.Id)
@@ -467,6 +500,23 @@ public partial class MainChatViewModel : ViewModelBase
             };
             attachment.GeneratePreview();
             StagedAttachments.Add(attachment);
+        }
+    }
+    
+    [RelayCommand]
+    public void JumpToMessage(Message? targetMessage)
+    {
+        if (targetMessage == null) return;
+    
+        var actualMessageInFeed = CurrentMessages.FirstOrDefault(m => m.Id == targetMessage.Id);
+        
+        if (actualMessageInFeed != null)
+        {
+            WeakReferenceMessenger.Default.Send(new ScrollToMessageRequest(actualMessageInFeed));
+        }
+        else
+        {
+            // TODO: Fetch older messages from the API here if it's too far back
         }
     }
 }

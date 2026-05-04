@@ -59,4 +59,7 @@ public record Message(
     
     [JsonIgnore]
     public string? DisplayAvatarUrl => Masquerade?.Avatar ?? User?.AvatarUrl;
+
+    [JsonIgnore]
+    public List<Message>? ResolvedReplies { get; set; }
 }

@@ -186,34 +186,48 @@ public class ApiClient
             return default;
         }
     }
-    
-    
+
+
     public static async Task<List<Message>?> FetchMessagesAsync(string channelId, int limit = 50)
     {
-        // Don't forget the include_users=true flag!
         var url = $"/channels/{channelId}/messages?limit={limit}&include_users=true";
 
         try
         {
-            // 1. Deserialize into the new Bulk envelope
             var response = await GetAsync<BulkMessageResponse>(url);
-            
-            if (response == null || response.Messages == null) 
+
+            if (response == null || response.Messages == null)
                 return new List<Message>();
 
-            // 2. Create a fast lookup dictionary for users
             var userLookup = response.Users.ToDictionary(u => u.Id);
+            var messageLookup = response.Messages.ToDictionary(m => m.Id);
 
-            // 3. Map the users into the messages using the 'with' keyword
-            var mappedMessages = response.Messages.Select(msg => 
+            var mappedMessages = response.Messages.Select(msg =>
             {
-                // Try to find the user in the dictionary. If found, attach it.
                 userLookup.TryGetValue(msg.Author, out var matchedUser);
-                
-                // Because records are immutable, 'with' creates a new Message instance 
-                // with the User property filled in.
-                return msg with { User = matchedUser };
-                
+
+                List<Message>? resolvedReplies = null;
+                if (msg.Replies?.Length > 0)
+                {
+                    resolvedReplies = new List<Message>();
+                    foreach (var replyId in msg.Replies)
+                    {
+                        if (messageLookup.TryGetValue(replyId, out var rawReply))
+                        {
+                            userLookup.TryGetValue(rawReply.Author, out var replyUser);
+                            resolvedReplies.Add(rawReply with { User = replyUser });
+                        }
+                    }
+
+                    if (resolvedReplies.Count == 0)
+                        resolvedReplies = null;
+                }
+
+                var finalMsg = msg with { User = matchedUser };
+                finalMsg.ResolvedReplies = resolvedReplies;
+
+                return finalMsg;
+
             }).ToList();
 
             return mappedMessages;
@@ -223,7 +237,7 @@ public class ApiClient
             return new List<Message>();
         }
     }
-    
+
     public static async Task SendMessageAsync(string channelId, string? content, IList<string>? attachmentIds = null)
     {
         var body = new Dictionary<string, object>();

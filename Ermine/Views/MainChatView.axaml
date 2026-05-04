@@ -497,15 +497,91 @@
         </Style>
     </ListBox.Styles>
 
-    <ListBox.ItemTemplate>
-        <DataTemplate x:DataType="models:Message">
-            <Grid ColumnDefinitions="Auto, *" Margin="10,8,10,8">
-                <Border Grid.Column="0" Width="40" Height="40" 
-                        CornerRadius="20" ClipToBounds="True"
-                        VerticalAlignment="Top" Background="#003e49">
-                    <Image asyncImageLoader:ImageLoader.Source="{Binding DisplayAvatarUrl}"
-                           Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality" />
-                </Border>
+<ListBox.ItemTemplate>
+    <DataTemplate x:DataType="models:Message">
+        <Grid RowDefinitions="Auto, *" Margin="10,4,10,4">
+            
+            <Panel Grid.Row="0" 
+                   IsVisible="{Binding ResolvedReplies, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+                <ItemsControl ItemsSource="{Binding ResolvedReplies}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:Message">
+                            <Grid ColumnDefinitions="40, *" Background="Transparent">
+                                    
+                                <Border Grid.Column="0" 
+                                        Width="22" 
+                                        Height="16" 
+                                        BorderBrush="#4f545c" 
+                                        BorderThickness="2,2,0,0" 
+                                        CornerRadius="6,0,0,0" 
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Bottom"
+                                        Margin="19,8,0,0"
+                                        UseLayoutRounding="True" />
+
+                                <Button Grid.Column="1"
+                                        Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).JumpToMessageCommand}"
+                                        CommandParameter="{Binding}"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="4,2"
+                                        Cursor="Hand"
+                                        Margin="2,2"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch">
+                                    <Button.Styles>
+                                        <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                            <Setter Property="Background" Value="#0Affffff"/>
+                                            <Setter Property="Opacity" Value="0.9"/>
+                                        </Style>
+                                    </Button.Styles>
+                                    
+                                    <Grid ColumnDefinitions="Auto, Auto, *">
+                                        <Border Grid.Column="0" Width="20" Height="20" CornerRadius="10" ClipToBounds="True" Background="#003e49" Margin="0,0,8,0">
+                                            <Image asyncImageLoader:ImageLoader.Source="{Binding DisplayAvatarUrl}"
+                                                   Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality" />
+                                        </Border>
+                                        
+                                        <TextBlock Grid.Column="1" Text="{Binding DisplayAuthorName}" 
+                                                   FontWeight="Bold" 
+                                                   Foreground="#d1d5db" 
+                                                   FontSize="13" 
+                                                   Margin="0,0,8,0"
+                                                   VerticalAlignment="Center"/>
+                                        
+                                        <TextBlock Grid.Column="2" Text="{Binding Content}" 
+                                                   Foreground="#949BA4" 
+                                                   FontSize="13" 
+                                                   TextTrimming="CharacterEllipsis" 
+                                                   VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Panel>
+
+            <Grid Grid.Row="1" ColumnDefinitions="40, *">
+                
+                <Panel Grid.Column="0" VerticalAlignment="Top">
+                    <Rectangle Width="2" 
+                               Fill="#4f545c" 
+                               HorizontalAlignment="Left" 
+                               VerticalAlignment="Top" 
+                               Height="12" 
+                               Margin="19,0,0,0" 
+                               UseLayoutRounding="True"
+                               IsVisible="{Binding ResolvedReplies, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    
+                    <Border Width="40" Height="40" 
+                            CornerRadius="20" ClipToBounds="True"
+                            VerticalAlignment="Top" Background="#003e49">
+                        <Image asyncImageLoader:ImageLoader.Source="{Binding DisplayAvatarUrl}"
+                               Stretch="UniformToFill" RenderOptions.BitmapInterpolationMode="HighQuality" />
+                    </Border>
+                </Panel>
 
                 <StackPanel Grid.Column="1" Margin="12,0,0,0">
                     <StackPanel Orientation="Horizontal" Spacing="8">
@@ -542,8 +618,9 @@
                     </ItemsControl>
                 </StackPanel>
             </Grid>
-        </DataTemplate>
-    </ListBox.ItemTemplate>
+        </Grid>
+    </DataTemplate>
+</ListBox.ItemTemplate>
 </ListBox>
 
 <Border Grid.Row="1" Background="#383145" CornerRadius="8" Margin="20,0,20,20">

@@ -39,6 +39,25 @@ public partial class MainChatView : UserControl
         {
             msg.Reply(PickFilesAsync(msg.Options));
         });
+        
+        WeakReferenceMessenger.Default.Register<MainChatViewModel.ScrollToMessageRequest>(this, (_, msg) =>
+        {
+            Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                MessageList.ScrollIntoView(msg.Target);
+        
+                _stickToBottom = false; 
+            });
+        });
+        MessageList.ContainerClearing += (s, e) =>
+        {
+            var imageControls = e.Container.GetVisualDescendants().OfType<Image>();
+            foreach (var imageControl in imageControls)
+            {
+                AsyncImageLoader.ImageLoader.SetSource(imageControl, null);
+                imageControl.Source = null; 
+            }
+        };
     }
     protected override void OnLoaded(RoutedEventArgs e)
     {
