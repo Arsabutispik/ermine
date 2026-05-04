@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/Arsabutispik/ermine/compare/v0.2.0...v0.2.1) (2026-05-04)
+
+
+### Bug Fixes
+
+* internal state sync ([f29cf74](https://github.com/Arsabutispik/ermine/commit/f29cf74917d93c3efdfd49cf2dc3032354309b4a))
+
 ## [0.2.0](https://github.com/Arsabutispik/ermine/compare/v0.1.0...v0.2.0) (2026-05-04)
 
 
