@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 using Ermine.Core;
 
@@ -21,10 +22,47 @@ public enum ChannelType
 [JsonDerivedType(typeof(DirectMessageChannel), typeDiscriminator: "DirectMessage")]
 [JsonDerivedType(typeof(Group), typeDiscriminator: "Group")]
 [JsonDerivedType(typeof(TextChannel), typeDiscriminator: "TextChannel")]
-public record Channel
+public record Channel : INotifyPropertyChanged
 {
     [JsonPropertyName("_id")]
     public string Id { get; init; } = string.Empty;
+    
+    [JsonPropertyName("last_message_id")]
+    public string? LastMessageId { get; init; }
+    
+    private bool _hasUnreads;
+    [JsonIgnore]
+    public bool HasUnreads
+    {
+        get => _hasUnreads;
+        set
+        {
+            if (_hasUnreads != value)
+            {
+                _hasUnreads = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasUnreads)));
+            }
+        }
+    }
+
+    private int _unreadCount;
+    [JsonIgnore]
+    public int UnreadCount
+    {
+        get => _unreadCount;
+        set
+        {
+            if (_unreadCount != value)
+            {
+                _unreadCount = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UnreadCount)));
+                
+                HasUnreads = _unreadCount > 0;
+            }
+        }
+    }
+    
+    public event PropertyChangedEventHandler? PropertyChanged;
     
     [JsonIgnore]
     public ChannelType ChannelType => this switch
@@ -90,14 +128,11 @@ public record SavedMessagesChannel : Channel
 
 public record DirectMessageChannel : Channel
 {
-    [JsonPropertyName("active")]
-    public bool Active { get; init; }
-    
+    [JsonPropertyName("active")] public bool Active { get; init; }
+
     [JsonPropertyName("recipients")]
     public System.Collections.Generic.IReadOnlyList<string> Recipients { get; init; } = [];
-    
-    [JsonPropertyName("last_message_id")]
-    public string? LastMessageId { get; init; }
+
 }
 
 public record Group : Channel
@@ -117,8 +152,6 @@ public record Group : Channel
     [JsonPropertyName("icon")]
     public Attachment? Icon { get; init; }
     
-    [JsonPropertyName("last_message_id")]
-    public string? LastMessageId { get; init; }
     
     [JsonPropertyName("nsfw")]
     public bool? Nsfw { get; init; }
@@ -159,8 +192,6 @@ public record TextChannel : Channel
     [JsonPropertyName("icon")]
     public Attachment? Icon { get; init; }
     
-    [JsonPropertyName("last_message_id")]
-    public string? LastMessageId { get; init; }
     
     [JsonPropertyName("nsfw")]
     public bool? Nsfw { get; init; }

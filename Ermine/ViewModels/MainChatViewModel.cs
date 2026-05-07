@@ -168,10 +168,41 @@ public partial class MainChatViewModel : ViewModelBase
                         CurrentMessages.Add(incomingMessage);
                     }
                 }
+                else
+                {
+                    var targetChannel = FindChannelById(incomingMessage.Channel);
+                    if (targetChannel != null)
+                    {
+                        targetChannel.UnreadCount++;
+                        
+                        if (targetChannel is TextChannel textChannel)
+                        {
+                            var parentServer = Servers.FirstOrDefault(s => s.Id == textChannel.Server);
+                            if (parentServer != null)
+                            {
+                                parentServer.HasUnreads = true;
+                            }
+                        }
+                    }
+                }
             }
         });
     }
 
+    private Channel? FindChannelById(string channelId)
+    {
+        var dm = DirectMessages.FirstOrDefault(c => c.Id == channelId);
+        if (dm != null) return dm;
+
+        foreach (var group in ServerChannelGroups)
+        {
+            var channel = group.Channels.FirstOrDefault(c => c.Id == channelId);
+            if (channel != null) return channel;
+        }
+
+        return null;
+    }
+    
     private async void InitializeGateway(string token)
     {
         try
@@ -198,10 +229,47 @@ public partial class MainChatViewModel : ViewModelBase
             }
         }
     }
+    
+    public void ProcessUnreads(List<UnreadState>? unreads)
+    {
+        if (unreads == null) return;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            foreach (var unread in unreads)
+            {
+                if (GlobalCache.Channels.TryGetValue(unread.Id.Channel, out var channel))
+                {
+                    int mentionCount = unread.Mentions?.Length ?? 0;
+                
+                    bool hasNewerMessages = !string.IsNullOrEmpty(channel.LastMessageId) && 
+                                            String.CompareOrdinal(channel.LastMessageId, unread.LastId) > 0;
+
+                    if (hasNewerMessages || mentionCount > 0)
+                    {
+                        channel.UnreadCount = Math.Max(1, mentionCount);
+
+                        if (channel is TextChannel textChannel)
+                        {
+                            var parentServer = Servers.FirstOrDefault(s => s.Id == textChannel.Server);
+                            if (parentServer != null)
+                            {
+                                parentServer.HasUnreads = true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        channel.UnreadCount = 0;
+                    }
+                }
+            }
+        });
+    }
 
     private void HandleReadyEvent(ReadyEvent readyData)
 {
-    Dispatcher.UIThread.InvokeAsync(() =>
+    Dispatcher.UIThread.InvokeAsync(async () =>
     {
         _allChannels.Clear();
         DirectMessages.Clear();
@@ -241,13 +309,18 @@ public partial class MainChatViewModel : ViewModelBase
         if (readyData.Users != null)
             foreach (var user in readyData.Users)
                 GlobalCache.Users[user.Id] = user;
-        
+        if (readyData.Channels != null)
+            foreach (var channel in readyData.Channels)
+                GlobalCache.Channels[channel.Id] = channel;
         if (readyData.Emojis != null)
             foreach (var emoji in readyData.Emojis)
                 GlobalCache.Emojis[emoji.Id] = emoji;
         if (readyData.Servers != null)
             foreach (var server in readyData.Servers)
                 GlobalCache.Servers[server.Id] = server;
+        if (readyData.ChannelUnreads != null)
+            ProcessUnreads(readyData.ChannelUnreads);
+        
 
         _isRestoringState = true;
 
@@ -310,10 +383,37 @@ public partial class MainChatViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void SelectChannel(Channel channel)
+    private async Task SelectChannel(Channel channel)
     {
         SelectedChannel = channel;
 
+        channel.UnreadCount = 0;
+        
+        if (channel is TextChannel textChannel)
+        {
+            var parentServer = Servers.FirstOrDefault(s => s.Id == textChannel.Server);
+            if (parentServer != null)
+            {
+                bool anyUnreadsLeft = ServerChannelGroups.Any(group => 
+                    group.Channels.Any(c => c.HasUnreads));
+                                      
+                parentServer.HasUnreads = anyUnreadsLeft;
+            }
+        }
+
+        try
+        {
+            var latestMessageId = channel.LastMessageId;
+            if (latestMessageId != null)
+            {
+                await ApiClient.AckMessageAsync(channel.Id, latestMessageId);
+            }
+        }
+        catch
+        {
+            Log.Error("Failed to acknowledge messages for channel {ChannelId}", channel.Id);
+        }
+        
         var settings = SettingsManager.Load();
         settings.LastServerId = SelectedServer?.Id;
         settings.LastChannelId = channel.Id;

@@ -291,7 +291,7 @@ public class ApiClient
             if (!response.IsSuccessStatusCode) return null;
 
             var json = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"Raw JSON: {json}");
+            
             return JsonSerializer.Deserialize<Emoji>(json);
         }
         catch (Exception ex)
@@ -299,5 +299,10 @@ public class ApiClient
             Console.WriteLine($"Failed to fetch emoji {emojiId}: {ex.Message}");
             return null;
         }
+    }
+
+    public static async Task AckMessageAsync(string channelId, string messageId)
+    {
+        await Http.PostAsync($"{InstanceUrl}/channels/{channelId}/ack/{messageId}", null);
     }
 }

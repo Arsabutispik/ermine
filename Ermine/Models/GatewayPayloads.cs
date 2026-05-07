@@ -15,5 +15,6 @@ public record ReadyEvent(
     List<Server>? Servers,
     [property: JsonPropertyName("users")] List<User>? Users,
     [property: JsonPropertyName("channels")] List<Channel>? Channels,
-    [property: JsonPropertyName("emojis")] List<Emoji>? Emojis
+    [property: JsonPropertyName("emojis")] List<Emoji>? Emojis,
+    [property: JsonPropertyName("channel_unreads")] List<UnreadState>? ChannelUnreads
 );

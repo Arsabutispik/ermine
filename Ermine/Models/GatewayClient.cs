@@ -38,14 +38,20 @@ public class GatewayClient
             using var httpHandler = new System.Net.Http.HttpClientHandler { ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true };
             using var http = new System.Net.Http.HttpClient(httpHandler) { BaseAddress = new Uri(ApiClient.InstanceUrl) };
             var config = await System.Net.Http.Json.HttpClientJsonExtensions.GetFromJsonAsync<InstanceConfig>(http, "");
-            var wsUrl = config?.WsUrl ?? "wss://ws.revolt.chat";
+            var wsUrl = config?.WsUrl ?? "wss://ws.stoat.chat";
             if (config?.Features.Autumn.Url != null)
             {
                 ApiClient.AutumnUrl = config.Features.Autumn.Url;
             }
+            
+            string connectionUrl = wsUrl + "?version=1&format=json"
+                                   + "&ready=users"
+                                   + "&ready=servers"
+                                   + "&ready=channels"
+                                   + "&ready=channel_unreads";
 
             _ws.Options.RemoteCertificateValidationCallback = (sender, cert, chain, sslPolicyErrors) => true;
-            await _ws.ConnectAsync(new Uri(wsUrl), CancellationToken.None);
+            await _ws.ConnectAsync(new Uri(connectionUrl), CancellationToken.None);
             Log.Information("Connected to Gateway at {Url}.", wsUrl);
 
             var authPayload = new AuthenticatePayload("Authenticate", _token);

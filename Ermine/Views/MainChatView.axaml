@@ -11,6 +11,7 @@
 
     <UserControl.Resources>
         <converters:ChannelSelectionConverter x:Key="ChannelSelectionConverter" />
+        <converters:BoolToUnreadBrushConverter x:Key="BoolToUnreadBrushConverter" />
     </UserControl.Resources>
 
     <Grid ColumnDefinitions="64, 240, *">
@@ -63,7 +64,7 @@
                                 <Setter Property="Padding" Value="0" />
                                 <Setter Property="Margin" Value="0,4" />
                                 <Setter Property="Template">
-                                    <ControlTemplate>
+                                    <ControlTemplate x:DataType="models:Server">
                                         <Panel HorizontalAlignment="Center">
                                             <ContentPresenter Name="PART_ContentPresenter"
                                                               Background="Transparent"
@@ -72,7 +73,17 @@
                                                               HorizontalAlignment="Center"
                                                               VerticalAlignment="Center"
                                                               Margin="0,0,0,0" />
-
+                                            
+                                            <Rectangle Name="UnreadIndicator"
+                                                       Width="4"
+                                                       Fill="#ffffff"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Left"
+                                                       Height="8"
+                                                       RadiusX="2" RadiusY="2"
+                                                       Margin="-6,0,0,0"
+                                                       IsVisible="{Binding HasUnreads}" />
+                                            
                                             <Rectangle Name="Indicator"
                                                        Width="4"
                                                        Fill="#00ffd8"
@@ -94,6 +105,20 @@
                             <Style Selector="ListBoxItem:selected Rectangle#Indicator">
                                 <Setter Property="Opacity" Value="1" />
                                 <Setter Property="Height" Value="36" />
+                            </Style>
+                            <Style Selector="ListBoxItem:pointerover Rectangle#UnreadIndicator">
+                                <Setter Property="Opacity" Value="0" />
+                            </Style>
+                            <Style Selector="ListBoxItem:selected Rectangle#UnreadIndicator">
+                                <Setter Property="Opacity" Value="0" />
+                            </Style>
+
+                            <Style Selector="Rectangle#UnreadIndicator">
+                                <Setter Property="Transitions">
+                                    <Transitions>
+                                        <DoubleTransition Property="Opacity" Duration="0:0:0.2" />
+                                    </Transitions>
+                                </Setter>
                             </Style>
 
                             <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
@@ -183,6 +208,7 @@
                                 <Setter Property="Foreground" Value="#949BA4" />
                                 <Setter Property="CornerRadius" Value="4" />
                                 <Setter Property="Margin" Value="12,1,8,1" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                                 <Setter Property="HorizontalAlignment" Value="Stretch" />
                                 <Setter Property="Cursor" Value="Hand" />
                                 <Setter Property="Template">
@@ -309,23 +335,33 @@
                                                             </MultiBinding>
                                                         </RadioButton.IsChecked>
 
-                                                        <StackPanel Orientation="Horizontal" Spacing="6"
-                                                                    VerticalAlignment="Center">
-                                                            <TextBlock Text="#" VerticalAlignment="Center" />
+                                                        <Grid ColumnDefinitions="Auto, *, Auto">
+        
+                                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                                <TextBlock Text="#" VerticalAlignment="Center" />
 
-                                                            <Border Width="18" Height="18"
-                                                                    ClipToBounds="True"
-                                                                    CornerRadius="4"
-                                                                    IsVisible="{Binding IconUrl, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                                                <Image
-                                                                    asyncImageLoader:ImageLoader.Source="{Binding IconUrl}"
-                                                                    Stretch="UniformToFill"
-                                                                    RenderOptions.BitmapInterpolationMode="HighQuality" />
-                                                            </Border>
+                                                                <Border Width="18" Height="18"
+                                                                        ClipToBounds="True"
+                                                                        CornerRadius="4"
+                                                                        IsVisible="{Binding IconUrl, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                                    <Image asyncImageLoader:ImageLoader.Source="{Binding IconUrl}"
+                                                                           Stretch="UniformToFill"
+                                                                           RenderOptions.BitmapInterpolationMode="HighQuality" />
+                                                                </Border>
 
-                                                            <TextBlock Text="{Binding DisplayName}"
-                                                                       VerticalAlignment="Center" />
-                                                        </StackPanel>
+                                                                <TextBlock Text="{Binding DisplayName}"
+                                                                           VerticalAlignment="Center"
+                                                                           Foreground="{Binding HasUnreads, Converter={StaticResource BoolToUnreadBrushConverter}}"/>
+                                                            </StackPanel>
+
+                                                            <Ellipse Grid.Column="2"
+                                                                     Width="6" Height="6"
+                                                                     Fill="#ffffff" 
+                                                                     HorizontalAlignment="Right"
+                                                                     VerticalAlignment="Center"
+                                                                     Margin="8,0,8,0"
+                                                                     IsVisible="{Binding HasUnreads}" /> 
+                                                        </Grid>
                                                     </RadioButton>
 
                                                 </DataTemplate>
@@ -464,6 +500,22 @@
                                                            Margin="10,0,0,0"
                                                            FontWeight="SemiBold"
                                                            FontSize="14" />
+                                                <Border Grid.Column="2"
+                                                        Height="16" MinWidth="16"
+                                                        CornerRadius="8"
+                                                        Background="#ed4245"
+                                                        HorizontalAlignment="Right"
+                                                        VerticalAlignment="Center"
+                                                        Margin="8,0,8,0"
+                                                        Padding="4,0"
+                                                        IsVisible="{Binding HasUnreads}"> 
+                                                    <TextBlock Text="{Binding UnreadCount}" 
+                                                               FontSize="10" 
+                                                               FontWeight="Bold" 
+                                                               Foreground="#ffffff" 
+                                                               HorizontalAlignment="Center" 
+                                                               VerticalAlignment="Center" />
+                                                </Border>
                                             </Grid>
                                         </RadioButton>
                                     </DataTemplate>
@@ -589,7 +641,7 @@
                                                                 <SelectableTextBlock Grid.Column="2"
                                                                         behaviors:MessageContentBehavior.FormattedMessage="{Binding}"
                                                                         Foreground="#949BA4"
-                                                                        FontSize="20"
+                                                                        FontSize="13"
                                                                         TextTrimming="CharacterEllipsis"
                                                                         VerticalAlignment="Center" />
                                                             </Grid>

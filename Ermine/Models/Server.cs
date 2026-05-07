@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 
 namespace Ermine.Models;
@@ -22,9 +23,24 @@ public record Server(
     // TODO: Add these fields
     // [property: JsonPropertyName("roles")] string[] Roles,
     // [property: JsonPropertyName("system_messages")] bool SystemMessages,
-)
+) : INotifyPropertyChanged
 {
-    // Ensure this has 'get;' and is inside the curly braces of the record
+    [JsonIgnore]
+    public bool HasUnreads
+    {
+        get;
+        set
+        {
+            if (field != value)
+            {
+                field = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasUnreads)));
+            }
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    
     public string IconUrl => Icon != null
         ? $"{ApiClient.AutumnUrl}/icons/{Icon.Id}"
         : $"https://api.dicebear.com/7.x/initials/png?seed={Uri.EscapeDataString(Name)}";
