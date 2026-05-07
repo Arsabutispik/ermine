@@ -77,9 +77,3 @@ public record User(
         return await ApiClient.GetAsync<User>($"users/{userId}");
     }
 }
-
-public static class GlobalCache
-{
-    public static Dictionary<string, User> Users { get; } = new();
-    public static string? CurrentUserId { get; set; }
-}

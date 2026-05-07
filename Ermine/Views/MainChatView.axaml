@@ -589,7 +589,7 @@
                                                                 <SelectableTextBlock Grid.Column="2"
                                                                         behaviors:MessageContentBehavior.FormattedMessage="{Binding}"
                                                                         Foreground="#949BA4"
-                                                                        FontSize="13"
+                                                                        FontSize="20"
                                                                         TextTrimming="CharacterEllipsis"
                                                                         VerticalAlignment="Center" />
                                                             </Grid>

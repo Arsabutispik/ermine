@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Text.Json.Serialization;
 using Avalonia.Media.Imaging;
+using Ermine.Core;
 
 namespace Ermine.Models;
 

@@ -241,6 +241,13 @@ public partial class MainChatViewModel : ViewModelBase
         if (readyData.Users != null)
             foreach (var user in readyData.Users)
                 GlobalCache.Users[user.Id] = user;
+        
+        if (readyData.Emojis != null)
+            foreach (var emoji in readyData.Emojis)
+                GlobalCache.Emojis[emoji.Id] = emoji;
+        if (readyData.Servers != null)
+            foreach (var server in readyData.Servers)
+                GlobalCache.Servers[server.Id] = server;
 
         _isRestoringState = true;
 

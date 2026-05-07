@@ -14,5 +14,6 @@ public record ReadyEvent(
     [property: JsonPropertyName("servers")]
     List<Server>? Servers,
     [property: JsonPropertyName("users")] List<User>? Users,
-    [property: JsonPropertyName("channels")] List<Channel>? Channels
+    [property: JsonPropertyName("channels")] List<Channel>? Channels,
+    [property: JsonPropertyName("emojis")] List<Emoji>? Emojis
 );

@@ -282,4 +282,22 @@ public class ApiClient
         var doc = JsonDocument.Parse(json);
         return doc.RootElement.GetProperty("id").GetString();
     }
+    
+    public static async Task<Emoji?> GetEmoji(string emojiId)
+    {
+        try
+        {
+            var response = await Http.GetAsync($"{InstanceUrl}/custom/emoji/{emojiId}");
+            if (!response.IsSuccessStatusCode) return null;
+
+            var json = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Raw JSON: {json}");
+            return JsonSerializer.Deserialize<Emoji>(json);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to fetch emoji {emojiId}: {ex.Message}");
+            return null;
+        }
+    }
 }
