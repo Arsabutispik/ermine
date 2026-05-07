@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Ermine.Models;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using Ermine.Core;
@@ -418,6 +419,8 @@ public partial class MainChatViewModel : ViewModelBase
                 var staged = attachmentsToSend[i];
                 var uiAttachment = pendingAttachments[i];
 
+                uiAttachment.UploadCts = new CancellationTokenSource();
+                
                 var progressReporter = new Progress<double>(percent => 
                 {
                     uiAttachment.UploadProgress = percent; 
@@ -427,7 +430,8 @@ public partial class MainChatViewModel : ViewModelBase
                     staged.FileName,
                     staged.Data,
                     staged.MimeType,
-                    progressReporter);
+                    progressReporter,
+                    uiAttachment.UploadCts.Token);
 
                 if (id != null)
                 {
@@ -665,5 +669,11 @@ public partial class MainChatViewModel : ViewModelBase
         {
             // TODO: Fetch older messages from the API here if it's too far back
         }
+    }
+    
+    [RelayCommand]
+    private void CancelUpload(Attachment attachment)
+    {
+        attachment.UploadCts?.Cancel(); 
     }
 }

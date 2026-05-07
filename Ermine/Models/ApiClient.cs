@@ -7,6 +7,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using Ermine.Core;
 using Ermine.Helpers;
@@ -260,7 +261,7 @@ public class ApiClient
 
         await Http.PostAsJsonAsync($"{InstanceUrl}/channels/{channelId}/messages", body);
     }
-    public static async Task<string?> UploadAttachmentAsync(string fileName, byte[] data, string mimeType, IProgress<double>? progress = null)
+    public static async Task<string?> UploadAttachmentAsync(string fileName, byte[] data, string mimeType, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
     {
         using var multipartContent = new MultipartFormDataContent();
     
@@ -274,7 +275,7 @@ public class ApiClient
 
         multipartContent.Add(fileContent, "file", fileName);
 
-        var response = await Http.PostAsync($"{AutumnUrl}/attachments", multipartContent);
+        var response = await Http.PostAsync($"{AutumnUrl}/attachments", multipartContent, cancellationToken);
         if (!response.IsSuccessStatusCode) return null;
 
         var json = await response.Content.ReadAsStringAsync();

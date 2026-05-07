@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
+using System.Threading;
 using Avalonia.Media.Imaging;
 
 namespace Ermine.Models;
@@ -133,4 +134,7 @@ public record Attachment(
             return scale >= 1 ? height : height * scale;
         }
     }
+    
+    [JsonIgnore]
+    public CancellationTokenSource? UploadCts { get; set; }
 }

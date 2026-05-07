@@ -659,22 +659,43 @@
                                                                 <!-- Uploading State Overlay -->
                                                                 <Border Background="#88000000"
                                                                         IsVisible="{Binding IsUploading}">
-                                                                    <StackPanel VerticalAlignment="Center"
-                                                                            HorizontalAlignment="Center"
-                                                                            Spacing="8">
-                                                                        <ProgressBar Value="{Binding UploadProgress}"
-                                                                                Minimum="0" Maximum="100"
-                                                                                Height="6" Width="100"
-                                                                                Foreground="#00ffd8"
-                                                                                Background="#4f545c"
-                                                                                CornerRadius="3" />
-                                                                        <TextBlock
-                                                                            Text="{Binding UploadProgress, StringFormat='Uploading {0}%'}"
-                                                                            Foreground="#ffffff"
-                                                                            FontSize="12"
-                                                                            FontWeight="SemiBold"
-                                                                            HorizontalAlignment="Center" />
-                                                                    </StackPanel>
+                                                                    <Panel>
+                                                                        <StackPanel VerticalAlignment="Center"
+                                                                                HorizontalAlignment="Center"
+                                                                                Spacing="8">
+                                                                            <ProgressBar Value="{Binding UploadProgress}"
+                                                                                    Minimum="0" Maximum="100"
+                                                                                    Height="6" Width="100"
+                                                                                    Foreground="#00ffd8"
+                                                                                    Background="#4f545c"
+                                                                                    CornerRadius="3" />
+                                                                            <TextBlock Text="{Binding UploadProgress, StringFormat='Uploading {0:0}%'}"
+                                                                                    Foreground="#ffffff"
+                                                                                    FontSize="12"
+                                                                                    FontWeight="SemiBold"
+                                                                                    HorizontalAlignment="Center" />
+                                                                        </StackPanel>
+
+                                                                        <Button Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).CancelUploadCommand}"
+                                                                                CommandParameter="{Binding}"
+                                                                                HorizontalAlignment="Right"
+                                                                                VerticalAlignment="Top"
+                                                                                Margin="8"
+                                                                                Background="#55000000"
+                                                                                CornerRadius="12"
+                                                                                Width="24" Height="24"
+                                                                                Padding="0"
+                                                                                Cursor="Hand"
+                                                                                ToolTip.Tip="Cancel Upload">
+                                                                            <Button.Styles>
+                                                                                <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                                                                    <Setter Property="Background" Value="#aaed4245" />
+                                                                                </Style>
+                                                                            </Button.Styles>
+                                                                            <TextBlock Text="✕" FontSize="12" FontWeight="Bold" Foreground="#ed4245" 
+                                                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                        </Button>
+                                                                    </Panel>
                                                                 </Border>
                                                             </Panel>
                                                         </Border>
