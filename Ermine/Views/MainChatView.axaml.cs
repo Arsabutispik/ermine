@@ -25,14 +25,15 @@ namespace Ermine.Views;
 
 public partial class MainChatView : UserControl
 {
-    private MainChatViewModel? _vm;
     private ObservableCollection<Message>? _messages;
-    private ScrollViewer? _scrollViewer;
-    private CancellationTokenSource? _scrollCts;
-    private bool _stickToBottom = true;
     private bool _prependingMessages;
-    private double _savedScrollOffset;
     private double _savedExtent;
+    private double _savedScrollOffset;
+    private CancellationTokenSource? _scrollCts;
+    private ScrollViewer? _scrollViewer;
+    private bool _stickToBottom = true;
+    private MainChatViewModel? _vm;
+
     public MainChatView()
     {
         InitializeComponent();
@@ -66,26 +67,26 @@ public partial class MainChatView : UserControl
         {
             BindScrollViewer();
             _stickToBottom = true;
-            ScheduleScrollToBottom(force: true);
+            ScheduleScrollToBottom(true);
         };
-        
+
         WeakReferenceMessenger.Default.Register<MainChatViewModel.PrependingMessagesNotification>(this, (_, _) =>
         {
             _savedScrollOffset = _scrollViewer?.Offset.Y ?? 0;
             _savedExtent = _scrollViewer?.Extent.Height ?? 0;
             _prependingMessages = true;
         });
-        
+
         WeakReferenceMessenger.Default.Register<MainChatViewModel.PrependedMessagesNotification>(this, (_, _) =>
         {
             Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 if (_scrollViewer == null) return;
 
-                double newExtent = _scrollViewer.Extent.Height;
-                int passes = 0;
+                var newExtent = _scrollViewer.Extent.Height;
+                var passes = 0;
 
-                Action noOp = () => { };
+                var noOp = () => { };
 
                 while (newExtent <= _savedExtent && passes < 10)
                 {
@@ -95,15 +96,15 @@ public partial class MainChatView : UserControl
                 }
 
                 var extentGrowth = newExtent - _savedExtent;
-        
+
                 if (extentGrowth > 0)
                 {
                     _scrollViewer.SetCurrentValue(ScrollViewer.OffsetProperty,
                         _scrollViewer.Offset.WithY(_savedScrollOffset + extentGrowth));
-                
+
                     await Dispatcher.UIThread.InvokeAsync(noOp, DispatcherPriority.Render);
                     var finalExtent = _scrollViewer.Extent.Height;
-                    if (Math.Abs(finalExtent - newExtent) > 1) 
+                    if (Math.Abs(finalExtent - newExtent) > 1)
                     {
                         var correction = finalExtent - newExtent;
                         _scrollViewer.SetCurrentValue(ScrollViewer.OffsetProperty,
@@ -146,7 +147,7 @@ public partial class MainChatView : UserControl
 
         if (_vm == null) return;
         _vm.PropertyChanged += OnVmPropertyChanged;
-        BindMessages(_vm.CurrentMessages, scrollToBottom: true);
+        BindMessages(_vm.CurrentMessages, true);
     }
 
     private void UnbindViewModel()
@@ -162,7 +163,7 @@ public partial class MainChatView : UserControl
         if (e.PropertyName == nameof(MainChatViewModel.CurrentMessages))
         {
             _stickToBottom = true;
-            BindMessages(_vm?.CurrentMessages, scrollToBottom: true);
+            BindMessages(_vm?.CurrentMessages, true);
         }
         else if (e.PropertyName == nameof(MainChatViewModel.SelectedChannel))
         {
@@ -182,7 +183,7 @@ public partial class MainChatView : UserControl
         if (scrollToBottom && _scrollViewer != null)
         {
             _stickToBottom = true;
-            ScheduleScrollToBottom(force: true);
+            ScheduleScrollToBottom(true);
         }
     }
 
@@ -204,7 +205,7 @@ public partial class MainChatView : UserControl
         }
 
         if (_stickToBottom)
-            ScheduleScrollToBottom(force: false);
+            ScheduleScrollToBottom(false);
     }
 
 
@@ -252,15 +253,9 @@ public partial class MainChatView : UserControl
     private void ScheduleScrollToBottom(bool force)
     {
         var sv = _scrollViewer ?? MessageList.FindDescendantOfType<ScrollViewer>();
-        if (sv == null)
-        {
-            return;
-        }
+        if (sv == null) return;
 
-        if (_scrollCts != null && !_scrollCts.IsCancellationRequested)
-        {
-            return;
-        }
+        if (_scrollCts != null && !_scrollCts.IsCancellationRequested) return;
 
         _scrollCts?.Dispose();
         _scrollCts = new CancellationTokenSource();
@@ -272,62 +267,64 @@ public partial class MainChatView : UserControl
                 _scrollCts = null;
         }, TaskScheduler.Default);
     }
-private static async Task DoScrollToBottomAsync(ScrollViewer sv, CancellationToken token)
-{
-    try
+
+    private static async Task DoScrollToBottomAsync(ScrollViewer sv, CancellationToken token)
     {
-        double lastExtent = -1;
-        int stableCount = 0;
-
-        for (int i = 0; i < 20; i++)
+        try
         {
-            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
-            if (token.IsCancellationRequested) return;
+            double lastExtent = -1;
+            var stableCount = 0;
 
-            var extent = sv.Extent.Height;
-            var viewport = sv.Viewport.Height;
-
-            if (extent == 0)
+            for (var i = 0; i < 20; i++)
             {
+                await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+                if (token.IsCancellationRequested) return;
+
+                var extent = sv.Extent.Height;
+                var viewport = sv.Viewport.Height;
+
+                if (extent == 0)
+                {
+                    lastExtent = extent;
+                    stableCount = 0;
+                    continue;
+                }
+
+                if (Math.Abs(extent - lastExtent) < 0.1)
+                    stableCount++;
+                else
+                    stableCount = 0;
+
                 lastExtent = extent;
+
+                if (stableCount < 2) continue;
+
+                if (extent <= viewport) return;
+
+                var distanceFromBottom = extent - viewport - sv.Offset.Y;
+                if (distanceFromBottom <= 50) return;
+
+                sv.SetCurrentValue(ScrollViewer.OffsetProperty, sv.Offset.WithY(double.MaxValue));
+
+                await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+                if (token.IsCancellationRequested) return;
+
+                distanceFromBottom = sv.Extent.Height - sv.Viewport.Height - sv.Offset.Y;
+
+                if (distanceFromBottom <= 50) return;
+
+                lastExtent = -1;
                 stableCount = 0;
-                continue;
             }
 
-            if (Math.Abs(extent - lastExtent) < 0.1)
-                stableCount++;
-            else
-                stableCount = 0;
-
-            lastExtent = extent;
-
-            if (stableCount < 2) continue;
-
-            if (extent <= viewport) return;
-
-            var distanceFromBottom = extent - viewport - sv.Offset.Y;
-            if (distanceFromBottom <= 50) return;
-
-            sv.SetCurrentValue(ScrollViewer.OffsetProperty, sv.Offset.WithY(double.MaxValue));
-
-            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
-            if (token.IsCancellationRequested) return;
-
-            distanceFromBottom = sv.Extent.Height - sv.Viewport.Height - sv.Offset.Y;
-
-            if (distanceFromBottom <= 50) return;
-            
-            lastExtent = -1;
-            stableCount = 0;
+            Log.Warning("DoScrollToBottomAsync: gave up after 20 passes");
         }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error scrolling message list to bottom");
+        }
+    }
 
-        Log.Warning("DoScrollToBottomAsync: gave up after 20 passes");
-    }
-    catch (Exception ex)
-    {
-        Log.Error(ex, "Error scrolling message list to bottom");
-    }
-}
     private async Task<IReadOnlyList<IStorageFile>?> PickFilesAsync(FilePickerOpenOptions options)
     {
         try

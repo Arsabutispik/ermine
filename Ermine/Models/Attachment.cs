@@ -1,5 +1,8 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
+using Avalonia.Media.Imaging;
 
 namespace Ermine.Models;
 
@@ -51,8 +54,48 @@ public record Attachment(
     string? ServerId = null,
     [property: JsonPropertyName("user_id")]
     string? UserId = null
-)
+) : INotifyPropertyChanged
 {
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    [JsonIgnore]
+    public bool IsUploading
+    {
+        get;
+        set
+        {
+            field = value;
+            OnPropertyChanged();
+        }
+    }
+
+    [JsonIgnore]
+    public double UploadProgress
+    {
+        get;
+        set
+        {
+            field = value;
+            OnPropertyChanged();
+        }
+    }
+
+    [JsonIgnore]
+    public Bitmap? LocalPreviewBitmap
+    {
+        get;
+        set
+        {
+            field = value;
+            OnPropertyChanged();
+        }
+    }
+
     [JsonIgnore]
     public string RawUrl => $"{ApiClient.AutumnUrl}/{Tag}/{Id}/{Filename}";
     
@@ -66,9 +109,13 @@ public record Attachment(
     {
         get
         {
-            if (Metadata is not ImageFileMetadata img || img.Width == 0) return 400;
-            var scale = Math.Min(400.0 / img.Width, 350.0 / img.Height);
-            return scale >= 1 ? img.Width : img.Width * scale;
+            int width = Metadata is ImageFileMetadata img ? img.Width : (LocalPreviewBitmap?.PixelSize.Width ?? 400);
+            int height = Metadata is ImageFileMetadata imgH ? imgH.Height : (LocalPreviewBitmap?.PixelSize.Height ?? 350);
+
+            if (width == 0 || height == 0) return 400;
+
+            var scale = Math.Min(400.0 / width, 350.0 / height);
+            return scale >= 1 ? width : width * scale;
         }
     }
 
@@ -77,9 +124,13 @@ public record Attachment(
     {
         get
         {
-            if (Metadata is not ImageFileMetadata img || img.Height == 0) return 350;
-            var scale = Math.Min(400.0 / img.Width, 350.0 / img.Height);
-            return scale >= 1 ? img.Height : img.Height * scale;
+            int width = Metadata is ImageFileMetadata img ? img.Width : (LocalPreviewBitmap?.PixelSize.Width ?? 400);
+            int height = Metadata is ImageFileMetadata imgH ? imgH.Height : (LocalPreviewBitmap?.PixelSize.Height ?? 350);
+
+            if (width == 0 || height == 0) return 350;
+
+            var scale = Math.Min(400.0 / width, 350.0 / height);
+            return scale >= 1 ? height : height * scale;
         }
     }
 }

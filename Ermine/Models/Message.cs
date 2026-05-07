@@ -59,6 +59,9 @@ public record Message(
 {
     [JsonIgnore]
     public bool IsMentionReply { get; init; }
+    
+    [JsonIgnore]
+    public bool IsPending { get; set; }
 
     [JsonIgnore] public string DisplayAuthorName => (IsMentionReply ? "@" : "") + (Masquerade?.Name ?? User?.Username ?? Author);
     

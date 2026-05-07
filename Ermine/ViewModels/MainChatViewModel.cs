@@ -83,6 +83,18 @@ public partial class MainChatViewModel : ViewModelBase
                 _messageCache[incomingMessage.Channel] = cached;
             }
             
+            int existingIndex = -1;
+            Message? pendingMsg = null;
+            
+            if (!string.IsNullOrEmpty(incomingMessage.Nonce))
+            {
+                existingIndex = cached.ToList().FindIndex(m => m.Nonce == incomingMessage.Nonce);
+                if (existingIndex >= 0)
+                {
+                    pendingMsg = cached[existingIndex];
+                }
+            }
+            
             if (incomingMessage.User == null && !string.IsNullOrEmpty(incomingMessage.Author))
             {
                 var knownMessage = cached.FirstOrDefault(m => m.Author == incomingMessage.Author && m.User != null);
@@ -120,13 +132,40 @@ public partial class MainChatViewModel : ViewModelBase
                 }
             }
             
-            cached.Add(incomingMessage);
-
-            if (SelectedChannel != null && incomingMessage.Channel == SelectedChannel.Id)
+            if (existingIndex >= 0 && pendingMsg != null)
             {
-                if (!ReferenceEquals(CurrentMessages, cached))
+                if (pendingMsg.Attachments != null && incomingMessage.Attachments != null)
                 {
-                    CurrentMessages.Add(incomingMessage);
+                    for (int i = 0; i < Math.Min(pendingMsg.Attachments.Count, incomingMessage.Attachments.Count); i++)
+                    {
+                        incomingMessage.Attachments[i].LocalPreviewBitmap = pendingMsg.Attachments[i].LocalPreviewBitmap;
+                    }
+                }
+
+                cached[existingIndex] = incomingMessage;
+
+                if (SelectedChannel != null && incomingMessage.Channel == SelectedChannel.Id)
+                {
+                    if (!ReferenceEquals(CurrentMessages, cached))
+                    {
+                        var viewIndex = CurrentMessages.IndexOf(pendingMsg);
+                        if (viewIndex >= 0) 
+                        {
+                            CurrentMessages[viewIndex] = incomingMessage;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                cached.Add(incomingMessage);
+
+                if (SelectedChannel != null && incomingMessage.Channel == SelectedChannel.Id)
+                {
+                    if (!ReferenceEquals(CurrentMessages, cached))
+                    {
+                        CurrentMessages.Add(incomingMessage);
+                    }
                 }
             }
         });
@@ -334,26 +373,83 @@ public partial class MainChatViewModel : ViewModelBase
         DraftMessage = string.Empty;
         StagedAttachments.Clear();
 
+        var pendingAttachments = new List<Attachment>();
+        foreach (var staged in attachmentsToSend)
+        {
+            var pendingAttachment = new Attachment(
+                Id: Guid.NewGuid().ToString(),
+                ContentType: GetMimeType(staged.FileName),
+                Filename: staged.FileName, 
+                Metadata: null,
+                Size: 0,
+                Tag: "pending"
+            )
+            {
+                IsUploading = true,
+                UploadProgress = 0,
+                LocalPreviewBitmap = staged.PreviewBitmap
+            };
+
+            pendingAttachments.Add(pendingAttachment);
+        }
+        
+        string messageNonce = Guid.NewGuid().ToString();
+
+        var pendingMessage = new Message(
+            Id: $"pending-{Guid.NewGuid()}",
+            Author: CurrentUser?.Id ?? "unknown",
+            Channel: SelectedChannel.Id,
+            Attachments: pendingAttachments,
+            Content: contentToSend,
+            Nonce: messageNonce,
+            User: CurrentUser
+        );
+
+        pendingMessage.IsPending = true;
+
+        CurrentMessages.Add(pendingMessage);
+
         try
         {
             var attachmentIds = new List<string>();
-            foreach (var attachment in attachmentsToSend)
+
+            for (int i = 0; i < attachmentsToSend.Count; i++)
             {
+                var staged = attachmentsToSend[i];
+                var uiAttachment = pendingAttachments[i];
+
+                var progressReporter = new Progress<double>(percent => 
+                {
+                    uiAttachment.UploadProgress = percent; 
+                });
+
                 var id = await ApiClient.UploadAttachmentAsync(
-                    attachment.FileName, 
-                    attachment.Data, 
-                    attachment.MimeType);
+                    staged.FileName,
+                    staged.Data,
+                    staged.MimeType,
+                    progressReporter);
+
                 if (id != null)
+                {
                     attachmentIds.Add(id);
+                    uiAttachment.UploadProgress = 100;
+                    await Task.Delay(200);
+                    uiAttachment.IsUploading = false;
+                }
             }
 
-            await ApiClient.SendMessageAsync(SelectedChannel.Id, contentToSend, attachmentIds);
+            await ApiClient.SendMessageAsync(SelectedChannel.Id, contentToSend, attachmentIds, messageNonce);
+
         }
         catch (Exception)
         {
+            CurrentMessages.Remove(pendingMessage);
+
             DraftMessage = contentToSend;
             foreach (var a in attachmentsToSend)
+            {
                 StagedAttachments.Add(a);
+            }
         }
     }
 
@@ -430,7 +526,7 @@ public partial class MainChatViewModel : ViewModelBase
                 WeakReferenceMessenger.Default.Send(new PrependedMessagesNotification()));
 
             if (messages.Count < 50)
-                _hasMoreMessages[channelId] = false;
+                _hasMoreMessages[channelId] = false;    
         }
         finally
         {

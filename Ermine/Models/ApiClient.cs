@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Ermine.Core;
+using Ermine.Helpers;
 using Serilog;
 
 namespace Ermine.Models;
@@ -247,24 +248,33 @@ public class ApiClient
         }
     }
 
-    public static async Task SendMessageAsync(string channelId, string? content, IList<string>? attachmentIds = null)
+    public static async Task SendMessageAsync(string channelId, string? content, IList<string>? attachmentIds = null, string? nonce = null)
     {
         var body = new Dictionary<string, object>();
         if (!string.IsNullOrEmpty(content))
             body["content"] = content;
         if (attachmentIds?.Count > 0)
             body["attachments"] = attachmentIds;
+        if (!string.IsNullOrEmpty(nonce))
+            body["nonce"] = nonce;
 
         await Http.PostAsJsonAsync($"{InstanceUrl}/channels/{channelId}/messages", body);
     }
-    public static async Task<string?> UploadAttachmentAsync(string fileName, byte[] data, string mimeType)
+    public static async Task<string?> UploadAttachmentAsync(string fileName, byte[] data, string mimeType, IProgress<double>? progress = null)
     {
-        using var content = new MultipartFormDataContent();
-        using var fileContent = new ByteArrayContent(data);
+        using var multipartContent = new MultipartFormDataContent();
+    
+        HttpContent fileContent = new ByteArrayContent(data);
         fileContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
-        content.Add(fileContent, "file", fileName);
 
-        var response = await Http.PostAsync($"{AutumnUrl}/attachments", content);
+        if (progress != null)
+        {
+            fileContent = new ProgressHttpContent(fileContent, progress);
+        }
+
+        multipartContent.Add(fileContent, "file", fileName);
+
+        var response = await Http.PostAsync($"{AutumnUrl}/attachments", multipartContent);
         if (!response.IsSuccessStatusCode) return null;
 
         var json = await response.Content.ReadAsStringAsync();

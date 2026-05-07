@@ -647,11 +647,36 @@
                                                                 Margin="0,0,0,8"
                                                                 HorizontalAlignment="Left"
                                                                 IsVisible="{Binding IsImage}"
-                                                                Width="{Binding DisplayWidth}"
-                                                                Height="{Binding DisplayHeight}">
-                                                            <Image
-                                                                asyncImageLoader:ImageLoader.Source="{Binding ThumbnailUrl}"
-                                                                Stretch="Uniform" />
+                                                                Width="{Binding DisplayWidth, FallbackValue=200}"
+                                                                Height="{Binding DisplayHeight, FallbackValue=200}">
+                                                            <Panel>
+                                                                <!-- The actual image -->
+                                                                <Image
+                                                                    asyncImageLoader:ImageLoader.Source="{Binding ThumbnailUrl}"
+                                                                    Source="{Binding LocalPreviewBitmap}"
+                                                                    Stretch="Uniform" />
+
+                                                                <!-- Uploading State Overlay -->
+                                                                <Border Background="#88000000"
+                                                                        IsVisible="{Binding IsUploading}">
+                                                                    <StackPanel VerticalAlignment="Center"
+                                                                            HorizontalAlignment="Center"
+                                                                            Spacing="8">
+                                                                        <ProgressBar Value="{Binding UploadProgress}"
+                                                                                Minimum="0" Maximum="100"
+                                                                                Height="6" Width="100"
+                                                                                Foreground="#00ffd8"
+                                                                                Background="#4f545c"
+                                                                                CornerRadius="3" />
+                                                                        <TextBlock
+                                                                            Text="{Binding UploadProgress, StringFormat='Uploading {0}%'}"
+                                                                            Foreground="#ffffff"
+                                                                            FontSize="12"
+                                                                            FontWeight="SemiBold"
+                                                                            HorizontalAlignment="Center" />
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </Panel>
                                                         </Border>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>
