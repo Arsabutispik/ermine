@@ -12,59 +12,8 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs['Ermine--release_created'] }}
-      tag_name: ${{ steps.release.outputs['Ermine--tag_name'] }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
-
-  build:
-    needs: release-please
-    if: ${{ needs.release-please.outputs.release_created }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - rid: win-x64
-            os: windows-latest
-          - rid: linux-x64
-            os: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Publish Binaries
-        run: dotnet publish Ermine/Ermine.csproj -r ${{ matrix.rid }} -c Release --self-contained -o out/${{ matrix.rid }}
-
-      - name: Install Velopack
-        run: dotnet tool install -g vpk
-
-      - name: Get Version Number
-        shell: bash
-        run: |
-          TAG_NAME="${{ needs.release-please.outputs.tag_name }}"
-          VERSION="${TAG_NAME#v}"
-          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Pack Windows
-        if: matrix.rid == 'win-x64'
-        run: vpk pack -u Ermine -v ${{ env.APP_VERSION }} -p out/win-x64 -e Ermine.exe -o velopack-out
-
-      - name: Pack Linux
-        if: matrix.rid == 'linux-x64'
-        shell: bash
-        run: |
-          chmod +x out/linux-x64/Ermine # Ensure it's executable before packing
-          vpk pack -u Ermine -v ${{ env.APP_VERSION }} -p out/linux-x64 -e Ermine -o velopack-out
-
-      - name: Upload to release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ needs.release-please.outputs.tag_name }}
-          files: velopack-out/*

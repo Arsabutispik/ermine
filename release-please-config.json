@@ -6,7 +6,7 @@
       "extra-files": [
         {
           "type": "xml",
-          "path": "Ermine/Ermine.csproj",
+          "path": "Ermine.csproj",
           "xpath": "//PropertyGroup/Version"
         }
       ]
