@@ -78,9 +78,9 @@
 
                 await mgr.DownloadUpdatesAsync(newVersion);
 
-                Log.Information("Update downloaded successfully. Applying and restarting...");
+                Log.Information("Update downloaded successfully. Applying...");
 
-                mgr.WaitExitThenApplyUpdates(newVersion);
+                mgr.WaitExitThenApplyUpdates(newVersion, silent: true, restart: false);
             }
             catch (Exception ex)
             {
