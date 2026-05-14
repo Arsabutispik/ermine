@@ -27,13 +27,12 @@ public partial class MainChatView : UserControl
 {
     private ObservableCollection<Message>? _messages;
     private bool _prependingMessages;
-    private double _savedExtent;
-    private double _savedScrollOffset;
     private CancellationTokenSource? _scrollCts;
     private ScrollViewer? _scrollViewer;
     private bool _stickToBottom = true;
     private MainChatViewModel? _vm;
-
+    private Message? _anchorMessage;
+    
     public MainChatView()
     {
         InitializeComponent();
@@ -72,46 +71,20 @@ public partial class MainChatView : UserControl
 
         WeakReferenceMessenger.Default.Register<MainChatViewModel.PrependingMessagesNotification>(this, (_, _) =>
         {
-            _savedScrollOffset = _scrollViewer?.Offset.Y ?? 0;
-            _savedExtent = _scrollViewer?.Extent.Height ?? 0;
+            _anchorMessage = _messages?.FirstOrDefault();
             _prependingMessages = true;
         });
 
         WeakReferenceMessenger.Default.Register<MainChatViewModel.PrependedMessagesNotification>(this, (_, _) =>
         {
-            Dispatcher.UIThread.InvokeAsync(async () =>
+            Dispatcher.UIThread.InvokeAsync(() =>
             {
-                if (_scrollViewer == null) return;
-
-                var newExtent = _scrollViewer.Extent.Height;
-                var passes = 0;
-
-                var noOp = () => { };
-
-                while (newExtent <= _savedExtent && passes < 10)
+                if (_anchorMessage != null)
                 {
-                    await Dispatcher.UIThread.InvokeAsync(noOp, DispatcherPriority.Render);
-                    newExtent = _scrollViewer.Extent.Height;
-                    passes++;
+                    MessageList.ScrollIntoView(_anchorMessage);
+                    _anchorMessage = null;
                 }
-
-                var extentGrowth = newExtent - _savedExtent;
-
-                if (extentGrowth > 0)
-                {
-                    _scrollViewer.SetCurrentValue(ScrollViewer.OffsetProperty,
-                        _scrollViewer.Offset.WithY(_savedScrollOffset + extentGrowth));
-
-                    await Dispatcher.UIThread.InvokeAsync(noOp, DispatcherPriority.Render);
-                    var finalExtent = _scrollViewer.Extent.Height;
-                    if (Math.Abs(finalExtent - newExtent) > 1)
-                    {
-                        var correction = finalExtent - newExtent;
-                        _scrollViewer.SetCurrentValue(ScrollViewer.OffsetProperty,
-                            _scrollViewer.Offset.WithY(_scrollViewer.Offset.Y + correction));
-                    }
-                }
-            });
+            }, DispatcherPriority.Loaded);
         });
     }
 
@@ -255,7 +228,7 @@ public partial class MainChatView : UserControl
         var sv = _scrollViewer ?? MessageList.FindDescendantOfType<ScrollViewer>();
         if (sv == null) return;
 
-        if (_scrollCts != null && !_scrollCts.IsCancellationRequested) return;
+        if (_scrollCts is { IsCancellationRequested: false }) return;
 
         _scrollCts?.Dispose();
         _scrollCts = new CancellationTokenSource();

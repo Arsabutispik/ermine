@@ -750,7 +750,7 @@
                                                                 <Image
                                                                     asyncImageLoader:ImageLoader.Source="{Binding ThumbnailUrl}"
                                                                     Source="{Binding LocalPreviewBitmap}"
-                                                                    Stretch="Uniform" />
+                                                                    Stretch="Fill" />
 
                                                                 <!-- Uploading State Overlay -->
                                                                 <Border Background="#88000000"

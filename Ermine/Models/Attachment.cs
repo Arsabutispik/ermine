@@ -94,6 +94,8 @@ public record Attachment(
         {
             field = value;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(DisplayWidth));
+            OnPropertyChanged(nameof(DisplayHeight));
         }
     }
 
@@ -105,33 +107,33 @@ public record Attachment(
     [JsonIgnore]
     public bool IsImage => ContentType?.StartsWith("image/") == true;
     
-    [JsonIgnore]
     public double DisplayWidth
     {
         get
         {
-            int width = Metadata is ImageFileMetadata img ? img.Width : (LocalPreviewBitmap?.PixelSize.Width ?? 400);
-            int height = Metadata is ImageFileMetadata imgH ? imgH.Height : (LocalPreviewBitmap?.PixelSize.Height ?? 350);
-
-            if (width == 0 || height == 0) return 400;
-
-            var scale = Math.Min(400.0 / width, 350.0 / height);
-            return scale >= 1 ? width : width * scale;
+            if (Metadata is not ImageFileMetadata img) 
+                return LocalPreviewBitmap?.PixelSize.Width ?? 400;
+        
+            if (img.Width == 0 || img.Height == 0) return 400;
+        
+            var maxSide = Math.Max(img.Width, img.Height);
+            var scale = maxSide > 400 ? 400.0 / maxSide : 1.0;
+            return Math.Round(img.Width * scale);
         }
     }
 
-    [JsonIgnore]
     public double DisplayHeight
     {
         get
         {
-            int width = Metadata is ImageFileMetadata img ? img.Width : (LocalPreviewBitmap?.PixelSize.Width ?? 400);
-            int height = Metadata is ImageFileMetadata imgH ? imgH.Height : (LocalPreviewBitmap?.PixelSize.Height ?? 350);
-
-            if (width == 0 || height == 0) return 350;
-
-            var scale = Math.Min(400.0 / width, 350.0 / height);
-            return scale >= 1 ? height : height * scale;
+            if (Metadata is not ImageFileMetadata img)
+                return LocalPreviewBitmap?.PixelSize.Height ?? 350;
+        
+            if (img.Width == 0 || img.Height == 0) return 350;
+        
+            var maxSide = Math.Max(img.Width, img.Height);
+            var scale = maxSide > 400 ? 400.0 / maxSide : 1.0;
+            return Math.Round(img.Height * scale);
         }
     }
     
