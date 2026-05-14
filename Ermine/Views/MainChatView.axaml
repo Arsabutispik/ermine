@@ -12,6 +12,7 @@
     <UserControl.Resources>
         <converters:ChannelSelectionConverter x:Key="ChannelSelectionConverter" />
         <converters:BoolToUnreadBrushConverter x:Key="BoolToUnreadBrushConverter" />
+        <converters:UserIdToVisibilityConverter x:Key="UserIdToVisibilityConverter" />
     </UserControl.Resources>
 
     <Grid ColumnDefinitions="64, 240, *">
@@ -825,10 +826,6 @@
                                             <Button
                                                 Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).StartReplyCommand}"
                                                 CommandParameter="{Binding}"
-                                                Background="Transparent"
-                                                BorderThickness="0"
-                                                Padding="4"
-                                                CornerRadius="4"
                                                 Cursor="Hand"
                                                 ToolTip.Tip="Reply">
                                                 <Button.Styles>
@@ -841,10 +838,44 @@
                                                 <Viewbox Width="16" Height="16" Margin="0,0,0,3">
                                                     <Path
                                                         Data="M10 9V5L3 12L10 19V14.9C15 14.9 18.5 16.5 21 20C20 15 17 10 10 9Z"
-                                                        Fill="#b5bac1" />
+                                                        Stroke="#b5bac1" StrokeThickness="2"
+                                                        StrokeLineCap="Round" StrokeJoin="Round"/>
+                                                </Viewbox>
+                                                
+                                                
+                                            </Button>
+                                            
+                                            <!-- Edit Button -->
+                                            <Button Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).StartEditCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    Cursor="Hand"
+                                                    IsVisible="{Binding Author, Converter={StaticResource UserIdToVisibilityConverter}}"
+                                                    ToolTip.Tip="Edit">
+                                                
+                                                <!-- Edit Icon -->
+                                                <Viewbox Width="16" Height="16" Margin="0,0,0,3">
+                                                    <Path
+                                                        Data="M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25ZM20.71 7.04C21.1 6.65 21.1 6.08 20.71 5.69L18.37 3.35C17.98 2.96 17.41 2.96 17.02 3.35L15.13 5.24L18.88 9L20.71 7.04Z"
+                                                        Stroke="#b5bac1" StrokeThickness="2"
+                                                        StrokeLineCap="Round" StrokeJoin="Round"/>
                                                 </Viewbox>
                                             </Button>
-
+                                            
+                                            <!-- Delete Button -->
+                                            <Button Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).DeleteMessageCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    Cursor="Hand"
+                                                    IsVisible="{Binding Author, Converter={StaticResource UserIdToVisibilityConverter}}"
+                                                    ToolTip.Tip="Delete">
+                                                
+                                                <!-- Delete Icon -->
+                                                <Viewbox Width="16" Height="16" Margin="0,0,0,3">
+                                                    <Path
+                                                        Data="M3 6L5 6 21 6M19 6L18.3333 19.6667C18.2533 20.6667 17.4533 21.3333 16.45 21.3333H7.55C6.54667 21.3333 5.74667 20.6667 5.66667 19.6667L5 6M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6"
+                                                        Stroke="#b5bac1" StrokeThickness="2"
+                                                        StrokeLineCap="Round" StrokeJoin="Round" />
+                                                </Viewbox>
+                                            </Button>
                                         </StackPanel>
                                     </Border>
                                 </Grid>
@@ -853,9 +884,38 @@
                     </ListBox>
 
                     <Border Grid.Row="1" Background="#383145" CornerRadius="8" Margin="20,0,20,20">
-                        <Grid RowDefinitions="Auto, Auto, Auto">
-
-                            <ItemsControl Grid.Row="0"
+                        <Grid RowDefinitions="Auto, Auto, Auto, Auto">
+                            
+                            <Border Grid.Row="0" 
+                                    Background="#2a233a" 
+                                    BorderBrush="#00ffd8" 
+                                    BorderThickness="0,0,0,1"
+                                    CornerRadius="8,8,0,0"
+                                    IsVisible="{Binding EditingMessage, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBlock Text="Editing message" Foreground="#00ffd8" Margin="12,8" VerticalAlignment="Center" FontSize="12" FontWeight="Bold"/>
+                
+                                    <Button Grid.Column="1" 
+                                            Command="{Binding CancelEditCommand}" 
+                                            Background="Transparent"
+                                            Padding="6"
+                                            Margin="0,0,12,0"
+                                            CornerRadius="16"
+                                            Cursor="Hand">
+                                        <Button.Styles>
+                                            <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                                <Setter Property="Background" Value="#1Affffff" />
+                                            </Style>
+                                        </Button.Styles>
+                                        <!-- Close Icon -->
+                                        <Viewbox Width="12" Height="12">
+                                            <Path Data="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12Z" Fill="#949BA4" />
+                                        </Viewbox>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            
+                            <ItemsControl Grid.Row="1"
                                           ItemsSource="{Binding PendingReplies}"
                                           Margin="12,12,12,4"
                                           IsVisible="{Binding !!PendingReplies.Count}">
@@ -974,7 +1034,7 @@
                             </ItemsControl>
 
                             <!-- Staged attachments preview -->
-                            <ItemsControl Grid.Row="1"
+                            <ItemsControl Grid.Row="2"
                                           ItemsSource="{Binding StagedAttachments}"
                                           IsVisible="{Binding !!StagedAttachments.Count}"
                                           Margin="12,12,12,0">
@@ -1039,7 +1099,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto">
+                            <Grid Grid.Row="3" ColumnDefinitions="Auto, *, Auto">
 
                                 <!-- Attachment Button -->
                                 <Button Grid.Column="0"

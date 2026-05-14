@@ -79,6 +79,9 @@ public partial class MainChatViewModel : ViewModelBase
     
     [ObservableProperty]
     public partial ObservableCollection<StagedAttachment> StagedAttachments { get; set; } = new();
+    
+    [ObservableProperty]
+    public partial Message? EditingMessage { get; set; }
 
     public MainChatViewModel(string sessionToken)
     {
@@ -199,6 +202,65 @@ public partial class MainChatViewModel : ViewModelBase
             }
         });
     }
+    
+    private void HandleMessageDeleted(MessageDeleteEvent deleteEvent)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (_messageCache.TryGetValue(deleteEvent.Channel, out var cached))
+            {
+                var msgToRemove = cached.FirstOrDefault(m => m.Id == deleteEvent.Id);
+                if (msgToRemove != null)
+                {
+                    cached.Remove(msgToRemove);
+                    
+                    if (!ReferenceEquals(CurrentMessages, cached) && SelectedChannel?.Id == deleteEvent.Channel)
+                    {
+                        CurrentMessages.Remove(msgToRemove);
+                    }
+                }
+            }
+        });
+    }
+    
+    private void HandleMessageUpdated(MessageUpdateEvent updateEvent)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!_messageCache.TryGetValue(updateEvent.Channel, out var cached)) return;
+
+            var index = cached.ToList().FindIndex(m => m.Id == updateEvent.Id);
+            if (index < 0) return;
+
+            var existing = cached[index];
+            var updated = existing with
+            {
+                Content = updateEvent.Data.Content ?? existing.Content,
+                Edited = updateEvent.Data.Edited ?? existing.Edited
+            };
+        
+            cached[index] = updated;
+
+            for (int i = 0; i < cached.Count; i++)
+            {
+                var msg = cached[i];
+                if (msg.ResolvedReplies?.Any(r => r.Id == updated.Id) == true)
+                {
+                    var newReplies = msg.ResolvedReplies.Select(r => r.Id == updated.Id ? updated : r).ToList();
+                    cached[i] = msg with { ResolvedReplies = newReplies };
+                }
+            }
+
+            if (!ReferenceEquals(CurrentMessages, cached) && SelectedChannel?.Id == updateEvent.Channel)
+            {
+                var viewIndex = CurrentMessages.IndexOf(existing);
+                if (viewIndex >= 0)
+                {
+                    CurrentMessages[viewIndex] = updated;
+                }
+            }
+        });
+    }
 
     private Channel? FindChannelById(string channelId)
     {
@@ -221,7 +283,8 @@ public partial class MainChatViewModel : ViewModelBase
             _gateway = new GatewayClient(token);
             _gateway.OnReady += HandleReadyEvent;
             _gateway.OnMessageReceived += HandleLiveMessage;
-
+            _gateway.OnMessageDeleted += HandleMessageDeleted;
+            _gateway.OnMessageUpdated += HandleMessageUpdated;
             await _gateway.StartAsync();
         }
         catch (Exception e)
@@ -533,7 +596,25 @@ public partial class MainChatViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(DraftMessage) && StagedAttachments.Count == 0) return;
         if (SelectedChannel == null) return;
+        
+        if (EditingMessage != null)
+        {
+            var msgId = EditingMessage.Id;
+            var newContent = DraftMessage;
+            CancelEdit();
 
+            try
+            {
+                await ApiClient.EditMessageAsync(SelectedChannel.Id, msgId, newContent);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to edit message");
+                DraftMessage = newContent; 
+            }
+            return;
+        }
+        
         var contentToSend = DraftMessage;
         var attachmentsToSend = StagedAttachments.ToList();
         var replyTargets = PendingReplies.ToList();
@@ -893,5 +974,34 @@ public partial class MainChatViewModel : ViewModelBase
         var settings = SettingsManager.Load();
         settings.MentionOnReply = value;
         SettingsManager.Save(settings);
+    }
+    
+    [RelayCommand]
+    private void StartEdit(Message target)
+    {
+        if (target.Author != CurrentUser?.Id) return;
+
+        EditingMessage = target;
+        if (target.Content != null) DraftMessage = target.Content;
+    }
+
+    [RelayCommand]
+    private void CancelEdit()
+    {
+        EditingMessage = null;
+        DraftMessage = string.Empty;
+    }
+
+    [RelayCommand]
+    private async Task DeleteMessageAsync(Message target)
+    {
+        try 
+        {
+            await ApiClient.DeleteMessageAsync(target.Channel, target.Id);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to delete message {MessageId}", target.Id);
+        }
     }
 }

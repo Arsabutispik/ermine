@@ -307,4 +307,19 @@ public class ApiClient
     {
         await Http.PostAsync($"{InstanceUrl}/channels/{channelId}/ack/{messageId}", null);
     }
+    
+    public static async Task DeleteMessageAsync(string channelId, string messageId)
+    {
+        await Http.DeleteAsync($"{InstanceUrl}/channels/{channelId}/messages/{messageId}");
+    }
+    
+    public static async Task EditMessageAsync(string channelId, string messageId, string newContent)
+    {
+        var body = new Dictionary<string, object>
+        {
+            ["content"] = newContent
+        };
+
+        await Http.PatchAsJsonAsync($"{InstanceUrl}/channels/{channelId}/messages/{messageId}", body);
+    }
 }

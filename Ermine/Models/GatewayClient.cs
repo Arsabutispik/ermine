@@ -22,6 +22,8 @@ public class GatewayClient
 
     public event Action<ReadyEvent>? OnReady;
     public event Action<Message>? OnMessageReceived;
+    public event Action<MessageDeleteEvent>? OnMessageDeleted;
+    public event Action<MessageUpdateEvent>? OnMessageUpdated;
 
     private record AutumnConfig([property: JsonPropertyName("url")] string Url);
     private record FeaturesConfig([property: JsonPropertyName("autumn")] AutumnConfig Autumn);
@@ -122,6 +124,24 @@ public class GatewayClient
                     if (message != null)
                     {
                         OnMessageReceived?.Invoke(message);
+                    }
+                }
+                else if (baseEvent?.Type == "MessageUpdate")
+                {
+                    ms.Seek(0, SeekOrigin.Begin);
+                    var updateEvent = await JsonSerializer.DeserializeAsync<MessageUpdateEvent>(ms);
+                    if (updateEvent != null)
+                    {
+                        OnMessageUpdated?.Invoke(updateEvent);
+                    }
+                }
+                else if (baseEvent?.Type == "MessageDelete")
+                {
+                    ms.Seek(0, SeekOrigin.Begin);
+                    var deleteEvent = await JsonSerializer.DeserializeAsync<MessageDeleteEvent>(ms);
+                    if (deleteEvent != null)
+                    {
+                        OnMessageDeleted?.Invoke(deleteEvent);
                     }
                 }
             }
