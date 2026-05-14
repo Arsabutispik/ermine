@@ -750,7 +750,8 @@
                                                                 <Image
                                                                     asyncImageLoader:ImageLoader.Source="{Binding ThumbnailUrl}"
                                                                     Source="{Binding LocalPreviewBitmap}"
-                                                                    Stretch="Fill" />
+                                                                    RenderOptions.BitmapInterpolationMode="HighQuality"
+                                                                    Stretch="Uniform" />
 
                                                                 <!-- Uploading State Overlay -->
                                                                 <Border Background="#88000000"

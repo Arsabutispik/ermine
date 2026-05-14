@@ -102,7 +102,7 @@ public record Attachment(
     [JsonIgnore]
     public string RawUrl => $"{ApiClient.AutumnUrl}/{Tag}/{Id}/{Filename}";
     
-    public string ThumbnailUrl => $"{RawUrl}?max_side=400";
+    public string ThumbnailUrl => $"{ApiClient.AutumnUrl}/{Tag}/{Id}";
     
     [JsonIgnore]
     public bool IsImage => ContentType?.StartsWith("image/") == true;

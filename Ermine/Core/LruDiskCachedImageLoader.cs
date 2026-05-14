@@ -79,8 +79,14 @@ public class LruDiskCachedImageLoader : IAsyncImageLoader
 
             using var fileStream = new FileStream(diskPath, FileMode.Open, FileAccess.Read, FileShare.Read);
             
-            int maxChatDisplayWidth = 400; 
-            bitmap = Bitmap.DecodeToWidth(fileStream, maxChatDisplayWidth);
+            if (_hasDecodeWidth)
+            {
+                bitmap = Bitmap.DecodeToWidth(fileStream, _decodeWidth);
+            }
+            else
+            {
+                bitmap = new Bitmap(fileStream);
+            }
 
             if (bitmap != null)
                 _ramCache.Add(url, bitmap);
