@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/Arsabutispik/ermine/compare/v0.1.4...v0.1.5) (2026-05-14)
+
+
+### Bug Fixes
+
+* update checker running infinitely v2 ([759e39b](https://github.com/Arsabutispik/ermine/commit/759e39bcc3d334f9d3272e636e448b75360f7c44))
+
 ## [0.1.4](https://github.com/Arsabutispik/ermine/compare/v0.1.3...v0.1.4) (2026-05-14)
 
 
