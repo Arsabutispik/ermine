@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/Arsabutispik/ermine/compare/v0.1.2...v0.1.3) (2026-05-14)
+
+
+### Bug Fixes
+
+* update manager to prevent infinite loop of updates and use GithubSource to make sure it doesn't crash trying to find updates ([086d75a](https://github.com/Arsabutispik/ermine/commit/086d75aada24bf5903593e7efdeff6eae3b0cab0))
+
 ## [0.1.2](https://github.com/Arsabutispik/ermine/compare/v0.1.1...v0.1.2) (2026-05-14)
 
 
