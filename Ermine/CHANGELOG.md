@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/Arsabutispik/ermine/compare/v0.1.3...v0.1.4) (2026-05-14)
+
+
+### Bug Fixes
+
+* fix channels being empty if you switch channels too fast ([39bb34f](https://github.com/Arsabutispik/ermine/commit/39bb34f4ff5fc2e670c88ea5c507c3ff17585afc))
+
 ## [0.1.3](https://github.com/Arsabutispik/ermine/compare/v0.1.2...v0.1.3) (2026-05-14)
 
 
