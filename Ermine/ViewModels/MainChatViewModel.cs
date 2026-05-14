@@ -30,6 +30,7 @@ public partial class MainChatViewModel : ViewModelBase
     private readonly Dictionary<string, bool> _isFetchingOlder = new();
     private readonly Dictionary<string, ObservableCollection<PendingReply>> _pendingRepliesCache = new();
     private readonly Dictionary<string, string> _draftMessageCache = new();
+    private readonly HashSet<string> _fetchedChannels = new();
     public record PrependingMessagesNotification;
     public record PrependedMessagesNotification;
     
@@ -725,7 +726,7 @@ public partial class MainChatViewModel : ViewModelBase
     {
         var loadVersion = ++_messageLoadVersion;
 
-        if (_messageCache.TryGetValue(channelId, out var cached))
+        if (_messageCache.TryGetValue(channelId, out var cached) && _fetchedChannels.Contains(channelId))
         {
             if (loadVersion != _messageLoadVersion) return;
             CurrentMessages = cached;
@@ -758,6 +759,7 @@ public partial class MainChatViewModel : ViewModelBase
         _messageCache[channelId] = collection;
         _hasMoreMessages[channelId] = messages.Count >= 50;
         _isFetchingOlder[channelId] = false;
+        _fetchedChannels.Add(channelId);
 
         CurrentMessages = collection;
         OnPropertyChanged(nameof(CurrentMessages));
@@ -786,9 +788,12 @@ public partial class MainChatViewModel : ViewModelBase
             Dispatcher.UIThread.Post(() =>
                 WeakReferenceMessenger.Default.Send(new PrependingMessagesNotification()));
 
-            messages.Reverse();
-            for (int i = 0; i < messages.Count; i++)
-                cached.Insert(i, messages[i]);
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                messages.Reverse();
+                for (int i = 0; i < messages.Count; i++)
+                    cached.Insert(i, messages[i]);
+            });
 
             Dispatcher.UIThread.Post(() =>
                 WeakReferenceMessenger.Default.Send(new PrependedMessagesNotification()));
