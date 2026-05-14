@@ -625,6 +625,7 @@ public partial class MainChatViewModel : ViewModelBase
         
         DraftMessage = string.Empty;
         StagedAttachments.Clear();
+        PendingReplies.Clear();
         ReplyingToMessage = null;
         var apiReplyPayload = replyTargets.Count > 0 
             ? replyTargets.Select(r => new ReplyPayload(r.TargetMessage.Id, Mention: r.Mention)).ToArray() 
@@ -706,7 +707,6 @@ public partial class MainChatViewModel : ViewModelBase
 
             await ApiClient.SendMessageAsync(SelectedChannel.Id, contentToSend, attachmentIds, messageNonce, apiReplyPayload);
             
-            ReplyingToMessage = null;
 
         }
         catch (Exception)
@@ -715,6 +715,8 @@ public partial class MainChatViewModel : ViewModelBase
 
             DraftMessage = contentToSend;
             ReplyingToMessage = localReplyIds != null && localReplyIds.Length > 0 ? replyTargets[0].TargetMessage : null;
+            foreach (var r in replyTargets)
+                PendingReplies.Add(r);
             foreach (var a in attachmentsToSend)
             {
                 StagedAttachments.Add(a);
