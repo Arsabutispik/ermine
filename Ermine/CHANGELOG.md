@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.3.0](https://github.com/Arsabutispik/ermine/compare/v0.2.1...v0.3.0) (2026-05-14)
+
+
+### Features
+
+* add button to stop attachments from uploading ([9a4911b](https://github.com/Arsabutispik/ermine/commit/9a4911b55dac6ae6e5c1d60d3aaee5c19a3d48b9))
+* add emoji rendering ([d079e6e](https://github.com/Arsabutispik/ermine/commit/d079e6eb0b535bc91d867f2b432caa1d253bcf09))
+* add mentions distinction and highlight mentions ([99682ee](https://github.com/Arsabutispik/ermine/commit/99682ee2aadcacc418ff7604a72933fd3fb9e4ff))
+* add message editing and deletion functionality ([3829b96](https://github.com/Arsabutispik/ermine/commit/3829b96cb02a8fa14f3e5722a248b7fd0d53f398))
+* add unread states ([a617c05](https://github.com/Arsabutispik/ermine/commit/a617c05e2428fcd468fe3cb8d45b35d216eec509))
+* attachment draft messages ([283d913](https://github.com/Arsabutispik/ermine/commit/283d913e678e42af63f7b0d9ba3c233f9ac86f91))
+* implement automatic update check on application startup ([a40cb18](https://github.com/Arsabutispik/ermine/commit/a40cb18e588c45fce3688aa016b15c0244a09007))
+* implement fetching older messages ([1be75c9](https://github.com/Arsabutispik/ermine/commit/1be75c948aa37c1eaa621e086e686ebb9c6c5ec4))
+* implement reply functionality ([62971a6](https://github.com/Arsabutispik/ermine/commit/62971a635aedea3163ccac60a1d5a4d8e41d307e))
+
+
+### Bug Fixes
+
+* best attempt fixing scrollbar ([505343f](https://github.com/Arsabutispik/ermine/commit/505343f14315ddaa9e835620647d6da74b1a479e))
+* old messages not getting fetched if the client received messages from that channel ([50e3a5f](https://github.com/Arsabutispik/ermine/commit/50e3a5ff7f350561140e94bb8d35f5bf3cb22ec2))
+
 ## [0.2.1](https://github.com/Arsabutispik/ermine/compare/v0.2.0...v0.2.1) (2026-05-04)
 
 
