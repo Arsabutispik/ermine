@@ -73,7 +73,7 @@
                                                               HorizontalAlignment="Center"
                                                               VerticalAlignment="Center"
                                                               Margin="0,0,0,0" />
-                                            
+
                                             <Rectangle Name="UnreadIndicator"
                                                        Width="4"
                                                        Fill="#ffffff"
@@ -83,7 +83,7 @@
                                                        RadiusX="2" RadiusY="2"
                                                        Margin="-6,0,0,0"
                                                        IsVisible="{Binding HasUnreads}" />
-                                            
+
                                             <Rectangle Name="Indicator"
                                                        Width="4"
                                                        Fill="#00ffd8"
@@ -336,31 +336,33 @@
                                                         </RadioButton.IsChecked>
 
                                                         <Grid ColumnDefinitions="Auto, *, Auto">
-        
-                                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+
+                                                            <StackPanel Grid.Column="0" Orientation="Horizontal"
+                                                                        Spacing="6" VerticalAlignment="Center">
                                                                 <TextBlock Text="#" VerticalAlignment="Center" />
 
                                                                 <Border Width="18" Height="18"
                                                                         ClipToBounds="True"
                                                                         CornerRadius="4"
                                                                         IsVisible="{Binding IconUrl, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                                                    <Image asyncImageLoader:ImageLoader.Source="{Binding IconUrl}"
-                                                                           Stretch="UniformToFill"
-                                                                           RenderOptions.BitmapInterpolationMode="HighQuality" />
+                                                                    <Image
+                                                                        asyncImageLoader:ImageLoader.Source="{Binding IconUrl}"
+                                                                        Stretch="UniformToFill"
+                                                                        RenderOptions.BitmapInterpolationMode="HighQuality" />
                                                                 </Border>
 
                                                                 <TextBlock Text="{Binding DisplayName}"
                                                                            VerticalAlignment="Center"
-                                                                           Foreground="{Binding HasUnreads, Converter={StaticResource BoolToUnreadBrushConverter}}"/>
+                                                                           Foreground="{Binding HasUnreads, Converter={StaticResource BoolToUnreadBrushConverter}}" />
                                                             </StackPanel>
 
                                                             <Ellipse Grid.Column="2"
                                                                      Width="6" Height="6"
-                                                                     Fill="#ffffff" 
+                                                                     Fill="#ffffff"
                                                                      HorizontalAlignment="Right"
                                                                      VerticalAlignment="Center"
                                                                      Margin="8,0,8,0"
-                                                                     IsVisible="{Binding HasUnreads}" /> 
+                                                                     IsVisible="{Binding HasUnreads}" />
                                                         </Grid>
                                                     </RadioButton>
 
@@ -500,7 +502,7 @@
                                                            Margin="10,0,0,0"
                                                            FontWeight="SemiBold"
                                                            FontSize="14" />
-                                                <Border Grid.Column="2"
+                                                <Border Grid.Column="1"
                                                         Height="16" MinWidth="16"
                                                         CornerRadius="8"
                                                         Background="#ed4245"
@@ -508,12 +510,12 @@
                                                         VerticalAlignment="Center"
                                                         Margin="8,0,8,0"
                                                         Padding="4,0"
-                                                        IsVisible="{Binding HasUnreads}"> 
-                                                    <TextBlock Text="{Binding UnreadCount}" 
-                                                               FontSize="10" 
-                                                               FontWeight="Bold" 
-                                                               Foreground="#ffffff" 
-                                                               HorizontalAlignment="Center" 
+                                                        IsVisible="{Binding HasUnreads}">
+                                                    <TextBlock Text="{Binding UnreadCount}"
+                                                               FontSize="10"
+                                                               FontWeight="Bold"
+                                                               Foreground="#ffffff"
+                                                               HorizontalAlignment="Center"
                                                                VerticalAlignment="Center" />
                                                 </Border>
                                             </Grid>
@@ -558,6 +560,7 @@
                             <Style Selector="ListBoxItem">
                                 <Setter Property="Padding" Value="0" />
                                 <Setter Property="Margin" Value="0" />
+                                <Setter Property="ClipToBounds" Value="False" />
                                 <Setter Property="Template">
                                     <ControlTemplate>
                                         <ContentPresenter Name="PART_ContentPresenter"
@@ -569,14 +572,52 @@
                                     </ControlTemplate>
                                 </Setter>
                             </Style>
+                            <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="Transparent" />
+                            </Style>
+
+                            <Style
+                                Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="#05ffffff" />
+                            </Style>
+
+                            <Style Selector="ListBoxItem:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="Background" Value="Transparent" />
+                            </Style>
                             <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
                                 <Setter Property="Background" Value="#05ffffff" />
+                            </Style>
+                            <Style Selector="ListBoxItem:pointerover">
+                                <Setter Property="ZIndex" Value="1" />
                             </Style>
                         </ListBox.Styles>
 
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="models:Message">
-                                <Grid RowDefinitions="Auto, *" Margin="10,4,10,4">
+                                <Grid Classes="MessageRow" RowDefinitions="Auto, *" Margin="10,4,10,4"
+                                      Background="Transparent" ClipToBounds="False">
+                                    <Grid.Styles>
+                                        <Style Selector="Grid.MessageRow Border.HoverActionBar">
+                                            <Setter Property="Opacity" Value="0" />
+                                            <Setter Property="IsHitTestVisible" Value="False" />
+                                            <Setter Property="Transitions">
+                                                <Transitions>
+                                                    <DoubleTransition Property="Opacity" Duration="0:0:0.1" />
+                                                </Transitions>
+                                            </Setter>
+                                        </Style>
+                                        <Style Selector="Grid.MessageRow:pointerover Border.HoverActionBar">
+                                            <Setter Property="Opacity" Value="1" />
+                                            <Setter Property="IsHitTestVisible" Value="True" />
+                                        </Style>
+                                    </Grid.Styles>
+                                    <Grid.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Reply"
+                                                      Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).StartReplyCommand}"
+                                                      CommandParameter="{Binding}" />
+                                        </ContextMenu>
+                                    </Grid.ContextMenu>
                                     <Border Grid.RowSpan="2"
                                             Margin="-6,0,-6,0"
                                             CornerRadius="6"
@@ -641,8 +682,10 @@
                                                                 <SelectableTextBlock Grid.Column="2"
                                                                         behaviors:MessageContentBehavior.FormattedMessage="{Binding}"
                                                                         Foreground="#949BA4"
+                                                                        behaviors:MessageContentBehavior.IsPreviewMode="True"
                                                                         FontSize="13"
                                                                         TextTrimming="CharacterEllipsis"
+                                                                        MaxLines="1"
                                                                         VerticalAlignment="Center" />
                                                             </Grid>
                                                         </Button>
@@ -715,37 +758,45 @@
                                                                         <StackPanel VerticalAlignment="Center"
                                                                                 HorizontalAlignment="Center"
                                                                                 Spacing="8">
-                                                                            <ProgressBar Value="{Binding UploadProgress}"
-                                                                                    Minimum="0" Maximum="100"
-                                                                                    Height="6" Width="100"
-                                                                                    Foreground="#00ffd8"
-                                                                                    Background="#4f545c"
-                                                                                    CornerRadius="3" />
-                                                                            <TextBlock Text="{Binding UploadProgress, StringFormat='Uploading {0:0}%'}"
-                                                                                    Foreground="#ffffff"
-                                                                                    FontSize="12"
-                                                                                    FontWeight="SemiBold"
-                                                                                    HorizontalAlignment="Center" />
+                                                                            <ProgressBar
+                                                                                Value="{Binding UploadProgress}"
+                                                                                Minimum="0" Maximum="100"
+                                                                                Height="6" Width="100"
+                                                                                Foreground="#00ffd8"
+                                                                                Background="#4f545c"
+                                                                                CornerRadius="3" />
+                                                                            <TextBlock
+                                                                                Text="{Binding UploadProgress, StringFormat='Uploading {0:0}%'}"
+                                                                                Foreground="#ffffff"
+                                                                                FontSize="12"
+                                                                                FontWeight="SemiBold"
+                                                                                HorizontalAlignment="Center" />
                                                                         </StackPanel>
 
-                                                                        <Button Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).CancelUploadCommand}"
-                                                                                CommandParameter="{Binding}"
-                                                                                HorizontalAlignment="Right"
-                                                                                VerticalAlignment="Top"
-                                                                                Margin="8"
-                                                                                Background="#55000000"
-                                                                                CornerRadius="12"
-                                                                                Width="24" Height="24"
-                                                                                Padding="0"
-                                                                                Cursor="Hand"
-                                                                                ToolTip.Tip="Cancel Upload">
+                                                                        <Button
+                                                                            Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).CancelUploadCommand}"
+                                                                            CommandParameter="{Binding}"
+                                                                            HorizontalAlignment="Right"
+                                                                            VerticalAlignment="Top"
+                                                                            Margin="8"
+                                                                            Background="#55000000"
+                                                                            CornerRadius="12"
+                                                                            Width="24" Height="24"
+                                                                            Padding="0"
+                                                                            Cursor="Hand"
+                                                                            ToolTip.Tip="Cancel Upload">
                                                                             <Button.Styles>
-                                                                                <Style Selector="Button:pointerover /template/ ContentPresenter">
-                                                                                    <Setter Property="Background" Value="#aaed4245" />
+                                                                                <Style
+                                                                                    Selector="Button:pointerover /template/ ContentPresenter">
+                                                                                    <Setter Property="Background"
+                                                                                        Value="#aaed4245" />
                                                                                 </Style>
                                                                             </Button.Styles>
-                                                                            <TextBlock Text="✕" FontSize="12" FontWeight="Bold" Foreground="#ed4245" 
-                                                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                            <TextBlock Text="✕" FontSize="12"
+                                                                                    FontWeight="Bold"
+                                                                                    Foreground="#ed4245"
+                                                                                    HorizontalAlignment="Center"
+                                                                                    VerticalAlignment="Center" />
                                                                         </Button>
                                                                     </Panel>
                                                                 </Border>
@@ -756,16 +807,174 @@
                                             </ItemsControl>
                                         </StackPanel>
                                     </Grid>
+                                    <Border Grid.Row="0" Grid.RowSpan="2"
+                                            Classes="HoverActionBar"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Background="#2a233a"
+                                            BorderBrush="#4f545c"
+                                            BorderThickness="1"
+                                            CornerRadius="4"
+                                            Padding="2"
+                                            Margin="0,-12,16,0"
+                                            BoxShadow="0 2 4 0 #40000000">
+
+                                        <StackPanel Orientation="Horizontal" Spacing="2">
+
+                                            <!-- Reply Button -->
+                                            <Button
+                                                Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).StartReplyCommand}"
+                                                CommandParameter="{Binding}"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Padding="4"
+                                                CornerRadius="4"
+                                                Cursor="Hand"
+                                                ToolTip.Tip="Reply">
+                                                <Button.Styles>
+                                                    <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                                        <Setter Property="Background" Value="#05ffffff" />
+                                                    </Style>
+                                                </Button.Styles>
+
+                                                <!-- Reply Icon -->
+                                                <Viewbox Width="16" Height="16" Margin="0,0,0,3">
+                                                    <Path
+                                                        Data="M10 9V5L3 12L10 19V14.9C15 14.9 18.5 16.5 21 20C20 15 17 10 10 9Z"
+                                                        Fill="#b5bac1" />
+                                                </Viewbox>
+                                            </Button>
+
+                                        </StackPanel>
+                                    </Border>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
 
                     <Border Grid.Row="1" Background="#383145" CornerRadius="8" Margin="20,0,20,20">
-                        <Grid RowDefinitions="Auto, Auto">
+                        <Grid RowDefinitions="Auto, Auto, Auto">
+
+                            <ItemsControl Grid.Row="0"
+                                          ItemsSource="{Binding PendingReplies}"
+                                          Margin="12,12,12,4"
+                                          IsVisible="{Binding !!PendingReplies.Count}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:PendingReply">
+                                        <Border Background="#2b2d42"
+                                                BorderBrush="#1a1b26"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Padding="12,8"
+                                                Margin="0,0,0,4"> 
+                                            <Grid ColumnDefinitions="Auto, *, Auto, Auto">
+
+                                                <TextBlock Grid.Column="0" Text="Replying to " Foreground="#949BA4"
+                                                           FontSize="13" VerticalAlignment="Center" />
+
+                                                <!-- Avatar, Username, and Formatted Content -->
+                                                <Grid Grid.Column="1" ColumnDefinitions="Auto, Auto, *" Margin="6,0,12,0" VerticalAlignment="Center">
+    
+                                                    <!-- Small Avatar -->
+                                                    <Border Grid.Column="0" Width="16" Height="16" CornerRadius="8" ClipToBounds="True" Background="#003e49" Margin="0,0,6,0">
+                                                        <Image asyncImageLoader:ImageLoader.Source="{Binding TargetMessage.DisplayAvatarUrl}" Stretch="UniformToFill"/>
+                                                    </Border>
+    
+                                                    <!-- Author Name -->
+                                                    <TextBlock Grid.Column="1" 
+                                                               Text="{Binding TargetMessage.DisplayAuthorName}" 
+                                                               FontWeight="Bold" 
+                                                               Foreground="#d1d5db" 
+                                                               FontSize="13" 
+                                                               Margin="0,0,6,0" 
+                                                               VerticalAlignment="Center" />
+    
+                                                    <!-- Formatted Message Content -->
+                                                    <SelectableTextBlock Grid.Column="2"
+                                                                         behaviors:MessageContentBehavior.FormattedMessage="{Binding TargetMessage}"
+                                                                         behaviors:MessageContentBehavior.IsPreviewMode="True"
+                                                                         Foreground="#949BA4" 
+                                                                         FontSize="13" 
+                                                                         TextTrimming="CharacterEllipsis" 
+                                                                         MaxLines="1"
+                                                                         VerticalAlignment="Center" />
+                                                </Grid>
+
+                                                <!-- Ping/Mention Toggle -->
+                                                <ToggleButton Grid.Column="2"
+                                                              IsChecked="{Binding Mention}"
+                                                              IsVisible="{Binding !IsSelfReply}"
+                                                              Background="Transparent"
+                                                              BorderThickness="0"
+                                                              Margin="0,0,12,0"
+                                                              Cursor="Hand">
+                                                    <ToggleButton.Styles>
+                                                        <Style Selector="ToggleButton">
+                                                            <Setter Property="Template">
+                                                                <ControlTemplate>
+                                                                    <Border Background="Transparent" CornerRadius="4"
+                                                                            Padding="6,2">
+                                                                        <StackPanel Orientation="Horizontal"
+                                                                                Spacing="4" VerticalAlignment="Center">
+                                                                            <TextBlock Name="AtSymbol" Text="@"
+                                                                                    FontWeight="Bold" FontSize="15" />
+                                                                            <TextBlock Name="StatusText" Text="OFF"
+                                                                                    FontSize="11" FontWeight="Bold"
+                                                                                    VerticalAlignment="Center"
+                                                                                    Margin="0,2,0,0" />
+                                                                        </StackPanel>
+                                                                    </Border>
+                                                                </ControlTemplate>
+                                                            </Setter>
+                                                        </Style>
+                                                        <Style
+                                                            Selector="ToggleButton /template/ TextBlock#AtSymbol, ToggleButton /template/ TextBlock#StatusText">
+                                                            <Setter Property="Foreground" Value="#949BA4" />
+                                                        </Style>
+                                                        <Style Selector="ToggleButton:pointerover /template/ Border">
+                                                            <Setter Property="Background" Value="#1Affffff" />
+                                                        </Style>
+                                                        <Style
+                                                            Selector="ToggleButton:checked /template/ TextBlock#AtSymbol, ToggleButton:checked /template/ TextBlock#StatusText">
+                                                            <Setter Property="Foreground" Value="#00ffd8" />
+                                                        </Style>
+                                                        <Style
+                                                            Selector="ToggleButton:checked /template/ TextBlock#StatusText">
+                                                            <Setter Property="Text" Value="ON" />
+                                                        </Style>
+                                                    </ToggleButton.Styles>
+                                                </ToggleButton>
+
+                                                <!-- Cancel Button -->
+                                                <Button Grid.Column="3"
+                                                        Command="{Binding $parent[UserControl].((vm:MainChatViewModel)DataContext).CancelReplyCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="Transparent"
+                                                        Padding="6"
+                                                        CornerRadius="16"
+                                                        Cursor="Hand"
+                                                        ToolTip.Tip="Remove Reply">
+                                                    <Button.Styles>
+                                                        <Style
+                                                            Selector="Button:pointerover /template/ ContentPresenter">
+                                                            <Setter Property="Background" Value="#1Affffff" />
+                                                        </Style>
+                                                    </Button.Styles>
+                                                    <!-- Close Icon -->
+                                                    <Viewbox Width="12" Height="12">
+                                                        <Path
+                                                            Data="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12Z"
+                                                            Fill="#949BA4" />
+                                                    </Viewbox>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
 
                             <!-- Staged attachments preview -->
-                            <ItemsControl Grid.Row="0"
+                            <ItemsControl Grid.Row="1"
                                           ItemsSource="{Binding StagedAttachments}"
                                           IsVisible="{Binding !!StagedAttachments.Count}"
                                           Margin="12,12,12,0">
@@ -830,7 +1039,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto">
+                            <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto">
 
                                 <!-- Attachment Button -->
                                 <Button Grid.Column="0"

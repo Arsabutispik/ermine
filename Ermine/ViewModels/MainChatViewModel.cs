@@ -28,6 +28,8 @@ public partial class MainChatViewModel : ViewModelBase
     private int _messageLoadVersion;
     private readonly Dictionary<string, bool> _hasMoreMessages = new();
     private readonly Dictionary<string, bool> _isFetchingOlder = new();
+    private readonly Dictionary<string, ObservableCollection<PendingReply>> _pendingRepliesCache = new();
+    private readonly Dictionary<string, string> _draftMessageCache = new();
     public record PrependingMessagesNotification;
     public record PrependedMessagesNotification;
     
@@ -65,6 +67,15 @@ public partial class MainChatViewModel : ViewModelBase
     public ObservableCollection<Channel> DirectMessages { get; } = new();
     public ObservableCollection<ChannelGroup> ServerChannelGroups { get; set; } = new();
     public ObservableCollection<Message> CurrentMessages { get; set; } = new();
+    
+    [ObservableProperty]
+    public partial Message? ReplyingToMessage { get; set; }
+    
+    [ObservableProperty]
+    public partial bool MentionReply { get; set; } = false;
+    
+    [ObservableProperty]
+    public partial ObservableCollection<PendingReply> PendingReplies { get; set; } = new();
     
     [ObservableProperty]
     public partial ObservableCollection<StagedAttachment> StagedAttachments { get; set; } = new();
@@ -325,7 +336,8 @@ public partial class MainChatViewModel : ViewModelBase
         _isRestoringState = true;
 
         var settings = SettingsManager.Load();
-
+        MentionReply = settings.MentionOnReply;
+        
         if (!string.IsNullOrEmpty(settings.LastServerId))
         {
             var previousServer = Servers.FirstOrDefault(s => s.Id == settings.LastServerId);
@@ -452,16 +464,63 @@ public partial class MainChatViewModel : ViewModelBase
         SettingsManager.Save(settings);
     }
 
-    partial void OnSelectedChannelChanged(Channel? value)
+    partial void OnSelectedChannelChanged(Channel? oldValue, Channel? newValue)
     {
-        if (value != null)
+        if (oldValue != null)
+        {
+            if (PendingReplies.Count > 0)
+            {
+                _pendingRepliesCache[oldValue.Id] = PendingReplies;
+            }
+            else
+            {
+                _pendingRepliesCache.Remove(oldValue.Id);
+            }
+            
+            if (!string.IsNullOrWhiteSpace(DraftMessage))
+            {
+                _draftMessageCache[oldValue.Id] = DraftMessage;
+            }
+            else
+            {
+                _draftMessageCache.Remove(oldValue.Id);
+            }
+        }
+
+        if (newValue != null)
+        {
+            if (_pendingRepliesCache.TryGetValue(newValue.Id, out var savedReplies))
+            {
+                PendingReplies = savedReplies;
+            }
+            else
+            {
+                PendingReplies = new ObservableCollection<PendingReply>();
+            }
+
+            if (_draftMessageCache.TryGetValue(newValue.Id, out var savedDraft))
+            {
+                DraftMessage = savedDraft;
+            }
+            else
+            {
+                DraftMessage = string.Empty;
+            }
+        }
+        else
+        {
+            PendingReplies = new ObservableCollection<PendingReply>();
+            DraftMessage = string.Empty;
+        }
+        
+        if (newValue != null)
         {
             if (SelectedServer != null)
             {
-                _serverChannelMemory[SelectedServer.Id] = value.Id;
+                _serverChannelMemory[SelectedServer.Id] = newValue.Id;
             }
 
-            _ = LoadMessagesAsync(value.Id);
+            _ = LoadMessagesAsync(newValue.Id);
         }
         else
         {
@@ -477,10 +536,18 @@ public partial class MainChatViewModel : ViewModelBase
 
         var contentToSend = DraftMessage;
         var attachmentsToSend = StagedAttachments.ToList();
-
+        var replyTargets = PendingReplies.ToList();
+        var localReplyIds = replyTargets.Count > 0 
+            ? replyTargets.Select(r => r.TargetMessage.Id).ToArray() 
+            : null;
+        
         DraftMessage = string.Empty;
         StagedAttachments.Clear();
-
+        ReplyingToMessage = null;
+        var apiReplyPayload = replyTargets.Count > 0 
+            ? replyTargets.Select(r => new ReplyPayload(r.TargetMessage.Id, Mention: r.Mention)).ToArray() 
+            : null;
+        
         var pendingAttachments = new List<Attachment>();
         foreach (var staged in attachmentsToSend)
         {
@@ -510,10 +577,16 @@ public partial class MainChatViewModel : ViewModelBase
             Attachments: pendingAttachments,
             Content: contentToSend,
             Nonce: messageNonce,
-            User: CurrentUser
+            User: CurrentUser,
+            Replies: localReplyIds
         );
 
         pendingMessage.IsPending = true;
+        
+        if (replyTargets.Count > 0)
+        {
+            pendingMessage.ResolvedReplies = replyTargets.Select(r => r.TargetMessage).ToList();
+        }
 
         CurrentMessages.Add(pendingMessage);
 
@@ -549,7 +622,9 @@ public partial class MainChatViewModel : ViewModelBase
                 }
             }
 
-            await ApiClient.SendMessageAsync(SelectedChannel.Id, contentToSend, attachmentIds, messageNonce);
+            await ApiClient.SendMessageAsync(SelectedChannel.Id, contentToSend, attachmentIds, messageNonce, apiReplyPayload);
+            
+            ReplyingToMessage = null;
 
         }
         catch (Exception)
@@ -557,6 +632,7 @@ public partial class MainChatViewModel : ViewModelBase
             CurrentMessages.Remove(pendingMessage);
 
             DraftMessage = contentToSend;
+            ReplyingToMessage = localReplyIds != null && localReplyIds.Length > 0 ? replyTargets[0].TargetMessage : null;
             foreach (var a in attachmentsToSend)
             {
                 StagedAttachments.Add(a);
@@ -782,5 +858,40 @@ public partial class MainChatViewModel : ViewModelBase
     private void CancelUpload(Attachment attachment)
     {
         attachment.UploadCts?.Cancel(); 
+    }
+    
+    [RelayCommand]
+    private void StartReply(Message targetMessage)
+    {
+        if (PendingReplies.Any(r => r.TargetMessage.Id == targetMessage.Id)) return;
+
+        var settings = SettingsManager.Load();
+    
+        var reply = new PendingReply(targetMessage, settings.MentionOnReply, CurrentUser?.Id ?? "");
+    
+        reply.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(PendingReply.Mention))
+            {
+                var currentSettings = SettingsManager.Load();
+                currentSettings.MentionOnReply = reply.Mention;
+                SettingsManager.Save(currentSettings);
+            }
+        };
+
+        PendingReplies.Add(reply);
+    }
+
+    [RelayCommand]
+    private void CancelReply(PendingReply reply)
+    {
+        PendingReplies.Remove(reply);
+    }
+    
+    partial void OnMentionReplyChanged(bool value)
+    {
+        var settings = SettingsManager.Load();
+        settings.MentionOnReply = value;
+        SettingsManager.Save(settings);
     }
 }

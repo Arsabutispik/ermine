@@ -20,13 +20,23 @@ public class MessageContentBehavior
         AvaloniaProperty.RegisterAttached<MessageContentBehavior, SelectableTextBlock, Message?>("FormattedMessage");
 
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _emojiNameCache = new();
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, bool> _failedEmojis = new();
 
     public static Message? GetFormattedMessage(SelectableTextBlock element) =>
         element.GetValue(FormattedMessageProperty);
 
     public static void SetFormattedMessage(SelectableTextBlock element, Message? value) =>
         element.SetValue(FormattedMessageProperty, value);
+    
+    public static readonly AttachedProperty<bool> IsPreviewModeProperty =
+        AvaloniaProperty.RegisterAttached<Control, SelectableTextBlock, bool>("IsPreviewMode", defaultValue: false);
 
+    public static void SetIsPreviewMode(SelectableTextBlock element, bool value) 
+        => element.SetValue(IsPreviewModeProperty, value);
+
+    public static bool GetIsPreviewMode(SelectableTextBlock element) 
+        => element.GetValue(IsPreviewModeProperty);
+        
     static MessageContentBehavior()
     {
         FormattedMessageProperty.Changed.AddClassHandler<SelectableTextBlock>(OnFormattedMessageChanged);
@@ -41,6 +51,17 @@ public class MessageContentBehavior
         tb.Inlines ??= new InlineCollection();
 
         var content = msg.Content;
+        
+        if (GetIsPreviewMode(tb))
+        {
+            var normalizedContent = content.Replace("\r\n", "\n");
+            var firstNewlineIndex = normalizedContent.IndexOf('\n');
+
+            if (firstNewlineIndex >= 0)
+            {
+                content = normalizedContent.Substring(0, firstNewlineIndex).TrimEnd() + "…";
+            }
+        }
 
         var tokens = Regex.Split(content, "(<@[a-zA-Z0-9]+>|\\:[a-zA-Z0-9]+\\:)").Where(t => !string.IsNullOrEmpty(t))
             .ToList();
@@ -128,7 +149,19 @@ public class MessageContentBehavior
             else if (token.StartsWith(":") && token.EndsWith(":"))
             {
                 var emojiId = token.Substring(1, token.Length - 2);
-
+                
+                if (emojiId.Length != 26)
+                {
+                    tb.Inlines.Add(new Run { Text = token });
+                    continue;
+                }
+                
+                if (_failedEmojis.ContainsKey(emojiId))
+                {
+                    tb.Inlines.Add(new Run { Text = token });
+                    continue;
+                }
+                
                 var emojiUrl = $"{ApiClient.AutumnUrl}/emojis/{emojiId}";
 
                 var emojiImage = new Image
@@ -145,7 +178,12 @@ public class MessageContentBehavior
                 ToolTip.SetVerticalOffset(emojiImage, -5);
 
                 emojiImage[ImageLoader.SourceProperty] = emojiUrl;
-
+                
+                var inlineContainer = new InlineUIContainer
+                {
+                    BaselineAlignment = BaselineAlignment.Center
+                };
+                
                 if (GlobalCache.Emojis.TryGetValue(emojiId, out var emoji))
                 {
                     var tooltipContent = new StackPanel
@@ -215,30 +253,27 @@ public class MessageContentBehavior
                     }
 
                     ToolTip.SetTip(emojiImage, tooltipContent);
+                    
+                    inlineContainer.Child = emojiImage;
                 }
                 else
                 {
+                    inlineContainer.Child = emojiImage;
                     Task.Run(async () =>
                     {
                         var fetchedEmoji = await ApiClient.GetEmoji(emojiId);
 
-                        if (fetchedEmoji != null && !string.IsNullOrEmpty(fetchedEmoji.Name))
+                        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                         {
-                            GlobalCache.Emojis[emojiId] = fetchedEmoji;
-
-                            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                            if (fetchedEmoji != null && !string.IsNullOrEmpty(fetchedEmoji.Name))
                             {
-                                var tooltipContent = new StackPanel
-                                {
-                                    Spacing = 4,
-                                    HorizontalAlignment = HorizontalAlignment.Center,
-                                    MinWidth = 100
-                                };
+                                GlobalCache.Emojis[emojiId] = fetchedEmoji;
 
+                                var tooltipContent = new StackPanel
+                                    { Spacing = 4, HorizontalAlignment = HorizontalAlignment.Center, MinWidth = 100 };
                                 tooltipContent.Children.Add(new TextBlock
                                 {
-                                    Text = $":{fetchedEmoji.Name}:",
-                                    FontWeight = FontWeight.Bold,
+                                    Text = $":{fetchedEmoji.Name}:", FontWeight = FontWeight.Bold,
                                     HorizontalAlignment = HorizontalAlignment.Center
                                 });
 
@@ -248,59 +283,54 @@ public class MessageContentBehavior
                                     {
                                         var serverLine = new StackPanel
                                         {
-                                            Orientation = Orientation.Horizontal,
-                                            Spacing = 6,
+                                            Orientation = Orientation.Horizontal, Spacing = 6,
                                             HorizontalAlignment = HorizontalAlignment.Center
                                         };
-
                                         if (!string.IsNullOrEmpty(server.IconUrl))
                                         {
                                             var icon = new Image { Width = 16, Height = 16 };
                                             icon[ImageLoader.SourceProperty] = server.IconUrl;
                                             RenderOptions.SetBitmapInterpolationMode(icon,
                                                 BitmapInterpolationMode.HighQuality);
-
                                             serverLine.Children.Add(new Border
                                             {
-                                                CornerRadius = new CornerRadius(8),
-                                                ClipToBounds = true,
-                                                Child = icon
+                                                CornerRadius = new CornerRadius(8), ClipToBounds = true, Child = icon
                                             });
                                         }
 
                                         serverLine.Children.Add(new TextBlock
                                         {
-                                            Text = $"From {server.Name}",
-                                            FontSize = 11,
-                                            Opacity = 0.8,
+                                            Text = $"From {server.Name}", FontSize = 11, Opacity = 0.8,
                                             VerticalAlignment = VerticalAlignment.Center
                                         });
-
                                         tooltipContent.Children.Add(serverLine);
                                     }
                                     else
                                     {
                                         tooltipContent.Children.Add(new TextBlock
                                         {
-                                            Text = "Private Server",
-                                            FontSize = 11,
-                                            Opacity = 0.6,
+                                            Text = "Private Server", FontSize = 11, Opacity = 0.6,
                                             HorizontalAlignment = HorizontalAlignment.Center
                                         });
                                     }
                                 }
 
                                 ToolTip.SetTip(emojiImage, tooltipContent);
-                            });
-                        }
+                            }
+                            else
+                            {
+                                _failedEmojis.TryAdd(emojiId, true);
+                                inlineContainer.Child = new TextBlock
+                                {
+                                    Text = token,
+                                    VerticalAlignment = VerticalAlignment.Center
+                                };
+                            }
+                        });
                     });
                 }
 
-                tb.Inlines.Add(new InlineUIContainer
-                {
-                    Child = emojiImage,
-                    BaselineAlignment = BaselineAlignment.Center
-                });
+                tb.Inlines.Add(inlineContainer);
                 continue;
             }
 

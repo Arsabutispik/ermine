@@ -9,4 +9,6 @@ public class AppSettings
     public List<string> SavedInstanceUrls { get; set; } = new();
     public string? LastServerId { get; set; }
     public string? LastChannelId { get; set; }
+    
+    public bool MentionOnReply { get; set; } = false; 
 }

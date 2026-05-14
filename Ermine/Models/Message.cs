@@ -26,6 +26,10 @@ public record BulkMessageResponse(
     [property: JsonPropertyName("users")] List<User> Users
     // [property: JsonPropertyName("members")] List<Member>? Members = null
 );
+public record ReplyPayload(
+    [property: JsonPropertyName("id")] string Id, 
+    [property: JsonPropertyName("mention")] bool Mention
+);
 
 public record Message(
     [property: JsonPropertyName("_id")] string Id,
@@ -64,7 +68,7 @@ public record Message(
     [JsonIgnore]
     public bool IsPending { get; set; }
 
-    [JsonIgnore] public string DisplayAuthorName => (IsMentionReply ? "@" : "") + (Masquerade?.Name ?? User?.Username ?? Author);
+    [JsonIgnore] public string DisplayAuthorName => (IsMentionReply ? "@" : "") + (Masquerade?.Name ?? User?.DisplayName ?? User?.Username ?? Author);
     
     [JsonIgnore]
     public string? DisplayAvatarUrl => Masquerade?.Avatar ?? User?.AvatarUrl;

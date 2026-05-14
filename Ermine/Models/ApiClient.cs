@@ -249,7 +249,7 @@ public class ApiClient
         }
     }
 
-    public static async Task SendMessageAsync(string channelId, string? content, IList<string>? attachmentIds = null, string? nonce = null)
+    public static async Task SendMessageAsync(string channelId, string? content, IList<string>? attachmentIds = null, string? nonce = null, ReplyPayload[]? replies = null)
     {
         var body = new Dictionary<string, object>();
         if (!string.IsNullOrEmpty(content))
@@ -258,6 +258,8 @@ public class ApiClient
             body["attachments"] = attachmentIds;
         if (!string.IsNullOrEmpty(nonce))
             body["nonce"] = nonce;
+        if (replies?.Length > 0)
+            body["replies"] = replies;
 
         await Http.PostAsJsonAsync($"{InstanceUrl}/channels/{channelId}/messages", body);
     }

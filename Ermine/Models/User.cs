@@ -47,12 +47,12 @@ public record User(
     [property: JsonPropertyName("online")] bool Online,
     [property: JsonPropertyName("relationship")] Relationship Relationship,
     [property: JsonPropertyName("username")] string Username,
-    [property: JsonPropertyName("avatar")] Attachment? Avatar,
-    [property: JsonPropertyName("badges")] uint Badges,
-    [property: JsonPropertyName("bot")]  BotInformation? Bot,
-    [property: JsonPropertyName("display_name")] string DisplayName,
-    [property: JsonPropertyName("flags")] uint Flags,
-    [property: JsonPropertyName("privileged")]  bool Privileged,
+    [property: JsonPropertyName("avatar")] Attachment? Avatar = null,
+    [property: JsonPropertyName("badges")] uint? Badges = 0,
+    [property: JsonPropertyName("bot")]  BotInformation? Bot = null,
+    [property: JsonPropertyName("display_name")] string? DisplayName = null,
+    [property: JsonPropertyName("flags")] uint? Flags = 0,
+    [property: JsonPropertyName("privileged")]  bool? Privileged = false,
     [property: JsonPropertyName("relations")] IReadOnlyList<StoatRelations>? Relations = null,
     [property: JsonPropertyName("status")] UserStatus? Status = null
 )
