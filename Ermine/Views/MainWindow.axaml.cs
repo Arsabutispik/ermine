@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Serilog;
 using Velopack;
+using Velopack.Sources;
 
 namespace Ermine.Views;
 
@@ -21,7 +22,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            var mgr = new UpdateManager("https://github.com/Arsabutispik/ermine");
+            var mgr = new UpdateManager(new GithubSource("https://github.com/Arsabutispik/ermine", null, false));
         
             if (!mgr.IsInstalled)
             {
@@ -38,7 +39,7 @@ public partial class MainWindow : Window
 
             Log.Information("Update available: {Version}", info.TargetFullRelease.Version);
             await mgr.DownloadUpdatesAsync(info);
-            mgr.ApplyUpdatesAndRestart(info);
+            mgr.WaitExitThenApplyUpdates(info);
         }
         catch (Exception ex)
         {
