@@ -728,7 +728,7 @@ public partial class MainChatViewModel : ViewModelBase
     {
         var loadVersion = ++_messageLoadVersion;
 
-        if (_messageCache.TryGetValue(channelId, out var cached) && _fetchedChannels.Contains(channelId))
+        if (_messageCache.TryGetValue(channelId, out var cached) && _fetchedChannels.Contains(channelId) && cached.Count > 0)
         {
             if (loadVersion != _messageLoadVersion) return;
             CurrentMessages = cached;
@@ -744,7 +744,10 @@ public partial class MainChatViewModel : ViewModelBase
 
         var messages = await ApiClient.FetchMessagesAsync(channelId);
         if (loadVersion != _messageLoadVersion || SelectedChannel?.Id != channelId)
+        {
+            _fetchedChannels.Remove(channelId);
             return;
+        }
 
         if (messages == null || !messages.Any())
         {
