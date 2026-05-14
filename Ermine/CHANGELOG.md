@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/Arsabutispik/ermine/compare/v0.1.1...v0.1.2) (2026-05-14)
+
+
+### Bug Fixes
+
+* retrigger release-please ([8cfe2d0](https://github.com/Arsabutispik/ermine/commit/8cfe2d0fda0c31e438f9398f6511259a6e4a5ac3))
+
 ## [0.1.1](https://github.com/Arsabutispik/ermine/compare/v0.1.0...v0.1.1) (2026-05-14)
 
 
