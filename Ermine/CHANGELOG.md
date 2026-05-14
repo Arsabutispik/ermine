@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/Arsabutispik/ermine/compare/v0.1.0...v0.1.1) (2026-05-14)
+
+
+### Bug Fixes
+
+* clear pending replies after sending a message ([088fe0d](https://github.com/Arsabutispik/ermine/commit/088fe0db89b5b02ce2d78174dacdc65c6940579d))
+
 ## [0.1.0](https://github.com/Arsabutispik/ermine/compare/v0.3.0...v0.1.0) (2026-05-14)
 
 
