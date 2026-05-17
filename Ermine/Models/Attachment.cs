@@ -1,9 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
+using Ermine.Core;
 
 namespace Ermine.Models;
 
@@ -106,6 +109,26 @@ public record Attachment(
     
     [JsonIgnore]
     public bool IsImage => ContentType?.StartsWith("image/") == true;
+    
+    [JsonIgnore]
+    public bool IsAnimated => Metadata is ImageFileMetadata { Animated: true }
+                              || ContentType == "image/gif";
+    
+    [JsonIgnore]
+    public Uri? LocalGifUri
+    {
+        get;
+        private set
+        {
+            field = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public async Task EnsureLocalGifUriAsync(LruDiskCachedImageLoader loader)
+    {
+        LocalGifUri = await loader.ProvideGifDiskPathAsync(ThumbnailUrl);
+    }
     
     public double DisplayWidth
     {

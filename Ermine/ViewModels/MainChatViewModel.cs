@@ -175,6 +175,7 @@ public partial class MainChatViewModel : ViewModelBase
             else
             {
                 cached.Add(incomingMessage);
+                _ = EnsureGifUrisAsync([incomingMessage]);
 
                 if (SelectedChannel != null && incomingMessage.Channel == SelectedChannel.Id)
                 {
@@ -762,6 +763,7 @@ public partial class MainChatViewModel : ViewModelBase
 
         var collection = new ObservableCollection<Message>(messages);
         _messageCache[channelId] = collection;
+        _ = EnsureGifUrisAsync(messages);
         _hasMoreMessages[channelId] = messages.Count >= 50;
         _isFetchingOlder[channelId] = false;
         _fetchedChannels.Add(channelId);
@@ -804,7 +806,9 @@ public partial class MainChatViewModel : ViewModelBase
                 WeakReferenceMessenger.Default.Send(new PrependedMessagesNotification()));
 
             if (messages.Count < 50)
-                _hasMoreMessages[channelId] = false;    
+                _hasMoreMessages[channelId] = false;
+            
+            _ = EnsureGifUrisAsync(messages);
         }
         finally
         {
@@ -1013,5 +1017,16 @@ public partial class MainChatViewModel : ViewModelBase
         {
             Log.Error(ex, "Failed to delete message {MessageId}", target.Id);
         }
+    }
+    
+    private static async Task EnsureGifUrisAsync(IEnumerable<Message> messages)
+    {
+        var tasks = messages
+            .Where(m => m.Attachments != null)
+            .SelectMany(m => m.Attachments!)
+            .Where(a => a.IsAnimated)
+            .Select(a => a.EnsureLocalGifUriAsync(App.ImageCache));
+
+        await Task.WhenAll(tasks);
     }
 }

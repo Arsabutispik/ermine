@@ -4,6 +4,7 @@
              xmlns:models="using:Ermine.Models"
              xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              xmlns:converters="clr-namespace:Ermine.Converters"
+             xmlns:anim="https://github.com/whistyun/AnimatedImage.Avalonia"
              xmlns:behaviors="using:Ermine.Behaviors"
              x:Class="Ermine.Views.MainChatView"
              x:DataType="vm:MainChatViewModel"
@@ -747,11 +748,14 @@
                                                                 Height="{Binding DisplayHeight, FallbackValue=200}">
                                                             <Panel>
                                                                 <!-- The actual image -->
-                                                                <Image
-                                                                    asyncImageLoader:ImageLoader.Source="{Binding ThumbnailUrl}"
-                                                                    Source="{Binding LocalPreviewBitmap}"
-                                                                    RenderOptions.BitmapInterpolationMode="HighQuality"
-                                                                    Stretch="Uniform" />
+                                                                <Image asyncImageLoader:ImageLoader.Source="{Binding ThumbnailUrl}"
+                                                                       IsVisible="{Binding !IsAnimated}"
+                                                                       RenderOptions.BitmapInterpolationMode="HighQuality"
+                                                                       Stretch="Uniform" />
+
+                                                                <Image IsVisible="{Binding IsAnimated}"
+                                                                       Stretch="Uniform"
+                                                                       behaviors:AttachmentAnimatedBehavior.AnimatedSourceUrl="{Binding ThumbnailUrl}" />
 
                                                                 <!-- Uploading State Overlay -->
                                                                 <Border Background="#88000000"

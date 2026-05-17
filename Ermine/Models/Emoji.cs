@@ -25,8 +25,8 @@ public record Emoji(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("parent")] EmojiParent Parent,
     [property: JsonPropertyName("animated")]
-    bool? Animated = null,
-    [property: JsonPropertyName("nsfw")] bool? Nsfw = null
+    bool Animated = false,
+    [property: JsonPropertyName("nsfw")] bool Nsfw = false
  )
 {
     [JsonIgnore] public bool IsServerEmoji => Parent?.Type == EmojiParentType.Server;

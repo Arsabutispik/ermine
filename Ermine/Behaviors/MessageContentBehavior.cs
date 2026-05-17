@@ -10,6 +10,7 @@ using Avalonia.Media;
 using Ermine.Models;
 using AsyncImageLoader;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using Ermine.Core;
 
 namespace Ermine.Behaviors;
@@ -19,24 +20,23 @@ public class MessageContentBehavior
     public static readonly AttachedProperty<Message?> FormattedMessageProperty =
         AvaloniaProperty.RegisterAttached<MessageContentBehavior, SelectableTextBlock, Message?>("FormattedMessage");
 
-    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _emojiNameCache = new();
-    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, bool> _failedEmojis = new();
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, bool> FailedEmojis = new();
 
     public static Message? GetFormattedMessage(SelectableTextBlock element) =>
         element.GetValue(FormattedMessageProperty);
 
     public static void SetFormattedMessage(SelectableTextBlock element, Message? value) =>
         element.SetValue(FormattedMessageProperty, value);
-    
+
     public static readonly AttachedProperty<bool> IsPreviewModeProperty =
         AvaloniaProperty.RegisterAttached<Control, SelectableTextBlock, bool>("IsPreviewMode", defaultValue: false);
 
-    public static void SetIsPreviewMode(SelectableTextBlock element, bool value) 
+    public static void SetIsPreviewMode(SelectableTextBlock element, bool value)
         => element.SetValue(IsPreviewModeProperty, value);
 
-    public static bool GetIsPreviewMode(SelectableTextBlock element) 
+    public static bool GetIsPreviewMode(SelectableTextBlock element)
         => element.GetValue(IsPreviewModeProperty);
-        
+
     static MessageContentBehavior()
     {
         FormattedMessageProperty.Changed.AddClassHandler<SelectableTextBlock>(OnFormattedMessageChanged);
@@ -51,7 +51,7 @@ public class MessageContentBehavior
         tb.Inlines ??= new InlineCollection();
 
         var content = msg.Content;
-        
+
         if (GetIsPreviewMode(tb))
         {
             var normalizedContent = content.Replace("\r\n", "\n");
@@ -149,177 +149,66 @@ public class MessageContentBehavior
             else if (token.StartsWith(":") && token.EndsWith(":"))
             {
                 var emojiId = token.Substring(1, token.Length - 2);
-                
+
                 if (emojiId.Length != 26)
                 {
                     tb.Inlines.Add(new Run { Text = token });
                     continue;
                 }
-                
-                if (_failedEmojis.ContainsKey(emojiId))
+
+                if (FailedEmojis.ContainsKey(emojiId))
                 {
                     tb.Inlines.Add(new Run { Text = token });
                     continue;
                 }
-                
-                var emojiUrl = $"{ApiClient.AutumnUrl}/emojis/{emojiId}";
 
-                var emojiImage = new Image
-                {
-                    Width = emojiSize,
-                    Height = emojiSize,
-                    Stretch = Stretch.Uniform,
-                    Margin = margin,
-                };
-                RenderOptions.SetBitmapInterpolationMode(emojiImage, BitmapInterpolationMode.HighQuality);
+                string emojiUrl = $"{ApiClient.AutumnUrl}/emojis/{emojiId}";
 
-                ToolTip.SetTip(emojiImage, $":{emojiId}:");
-                ToolTip.SetPlacement(emojiImage, PlacementMode.Top);
-                ToolTip.SetVerticalOffset(emojiImage, -5);
+                var isAnimated = GlobalCache.Emojis.TryGetValue(emojiId, out var emoji) && emoji.Animated;
+                var emojiControl = CreateEmojiControl(emojiUrl, emojiSize, margin, isAnimated);
 
-                emojiImage[ImageLoader.SourceProperty] = emojiUrl;
-                
+
+                ToolTip.SetTip(emojiControl, $":{emojiId}:");
+                ToolTip.SetPlacement(emojiControl, PlacementMode.Top);
+                ToolTip.SetVerticalOffset(emojiControl, -5);
+
                 var inlineContainer = new InlineUIContainer
                 {
                     BaselineAlignment = BaselineAlignment.Center
                 };
-                
-                if (GlobalCache.Emojis.TryGetValue(emojiId, out var emoji))
+
+                if (emoji != null)
                 {
-                    var tooltipContent = new StackPanel
-                    {
-                        Spacing = 4,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        MinWidth = 100
-                    };
-
-                    tooltipContent.Children.Add(new TextBlock
-                    {
-                        Text = $":{emoji.Name}:",
-                        FontWeight = FontWeight.Bold,
-                        HorizontalAlignment = HorizontalAlignment.Center
-                    });
-
-                    if (emoji.Parent.Type == EmojiParentType.Server)
-                    {
-                        if (GlobalCache.Servers.TryGetValue(emoji.Parent.Id, out var server))
-                        {
-                            var serverLine = new StackPanel
-                            {
-                                Orientation = Orientation.Horizontal,
-                                Spacing = 6,
-                                HorizontalAlignment = HorizontalAlignment.Center
-                            };
-
-                            if (!string.IsNullOrEmpty(server.IconUrl))
-                            {
-                                var icon = new Image
-                                {
-                                    Width = 16,
-                                    Height = 16,
-                                    [ImageLoader.SourceProperty] = server.IconUrl
-                                };
-
-                                RenderOptions.SetBitmapInterpolationMode(icon, BitmapInterpolationMode.HighQuality);
-                                var iconBorder = new Border
-                                {
-                                    CornerRadius = new CornerRadius(8),
-                                    ClipToBounds = true,
-                                    Child = icon
-                                };
-                                serverLine.Children.Add(iconBorder);
-                            }
-
-                            serverLine.Children.Add(new TextBlock
-                            {
-                                Text = $"From {server.Name}",
-                                FontSize = 11,
-                                Opacity = 0.8,
-                                VerticalAlignment = VerticalAlignment.Center
-                            });
-
-                            tooltipContent.Children.Add(serverLine);
-                        }
-                        else
-                        {
-                            tooltipContent.Children.Add(new TextBlock
-                            {
-                                Text = "Private Server",
-                                FontSize = 11,
-                                Opacity = 0.6,
-                                HorizontalAlignment = HorizontalAlignment.Center
-                            });
-                        }
-                    }
-
-                    ToolTip.SetTip(emojiImage, tooltipContent);
-                    
-                    inlineContainer.Child = emojiImage;
+                    SetEmojiTooltip(emojiControl, emoji);
+                    inlineContainer.Child = emojiControl;
                 }
                 else
                 {
-                    inlineContainer.Child = emojiImage;
+                    inlineContainer.Child = emojiControl;
                     Task.Run(async () =>
                     {
                         var fetchedEmoji = await ApiClient.GetEmoji(emojiId);
 
-                        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                        await Dispatcher.UIThread.InvokeAsync(() =>
                         {
                             if (fetchedEmoji != null && !string.IsNullOrEmpty(fetchedEmoji.Name))
                             {
                                 GlobalCache.Emojis[emojiId] = fetchedEmoji;
 
-                                var tooltipContent = new StackPanel
-                                    { Spacing = 4, HorizontalAlignment = HorizontalAlignment.Center, MinWidth = 100 };
-                                tooltipContent.Children.Add(new TextBlock
+                                if (fetchedEmoji.Animated)
                                 {
-                                    Text = $":{fetchedEmoji.Name}:", FontWeight = FontWeight.Bold,
-                                    HorizontalAlignment = HorizontalAlignment.Center
-                                });
-
-                                if (fetchedEmoji.Parent?.Type == EmojiParentType.Server)
-                                {
-                                    if (GlobalCache.Servers.TryGetValue(fetchedEmoji.Parent.Id, out var server))
-                                    {
-                                        var serverLine = new StackPanel
-                                        {
-                                            Orientation = Orientation.Horizontal, Spacing = 6,
-                                            HorizontalAlignment = HorizontalAlignment.Center
-                                        };
-                                        if (!string.IsNullOrEmpty(server.IconUrl))
-                                        {
-                                            var icon = new Image { Width = 16, Height = 16 };
-                                            icon[ImageLoader.SourceProperty] = server.IconUrl;
-                                            RenderOptions.SetBitmapInterpolationMode(icon,
-                                                BitmapInterpolationMode.HighQuality);
-                                            serverLine.Children.Add(new Border
-                                            {
-                                                CornerRadius = new CornerRadius(8), ClipToBounds = true, Child = icon
-                                            });
-                                        }
-
-                                        serverLine.Children.Add(new TextBlock
-                                        {
-                                            Text = $"From {server.Name}", FontSize = 11, Opacity = 0.8,
-                                            VerticalAlignment = VerticalAlignment.Center
-                                        });
-                                        tooltipContent.Children.Add(serverLine);
-                                    }
-                                    else
-                                    {
-                                        tooltipContent.Children.Add(new TextBlock
-                                        {
-                                            Text = "Private Server", FontSize = 11, Opacity = 0.6,
-                                            HorizontalAlignment = HorizontalAlignment.Center
-                                        });
-                                    }
+                                    var animatedEmojiControl = CreateEmojiControl(emojiUrl, emojiSize, margin, true);
+                                    SetEmojiTooltip(animatedEmojiControl, fetchedEmoji);
+                                    inlineContainer.Child = animatedEmojiControl;
                                 }
-
-                                ToolTip.SetTip(emojiImage, tooltipContent);
+                                else
+                                {
+                                    SetEmojiTooltip(emojiControl, fetchedEmoji);
+                                }
                             }
                             else
                             {
-                                _failedEmojis.TryAdd(emojiId, true);
+                                FailedEmojis.TryAdd(emojiId, true);
                                 inlineContainer.Child = new TextBlock
                                 {
                                     Text = token,
@@ -336,5 +225,131 @@ public class MessageContentBehavior
 
             tb.Inlines.Add(new Run { Text = token });
         }
+    }
+
+    private static Control CreateEmojiControl(string emojiUrl, double emojiSize, Thickness margin, bool animated)
+    {
+        if (animated)
+        {
+            var img = new Image
+            {
+                Width = emojiSize,
+                Height = emojiSize,
+                Stretch = Stretch.Uniform,
+                Margin = margin,
+            };
+
+            var framesTask = Task.Run(() => App.ImageCache.ProvideFramesAsync(emojiUrl));
+
+            framesTask.ContinueWith(t =>
+            {
+                var frames = t.Result;
+                if (frames == null || frames.Count == 0) return;
+        
+                img.Source = frames[0].Bitmap;
+        
+                if (frames.Count > 1)
+                {
+                    int index = 0;
+                    void Tick()
+                    {
+                        index = (index + 1) % frames.Count;
+                        img.Source = frames[index].Bitmap;
+                        Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            await Task.Delay(frames[index].DelayMs);
+                            Tick();
+                        });
+                    }
+                    Dispatcher.UIThread.InvokeAsync(async () =>
+                    {
+                        await Task.Delay(frames[0].DelayMs);
+                        Tick();
+                    });
+                }
+            }, TaskScheduler.FromCurrentSynchronizationContext());
+
+            return img;
+        }
+
+        var staticImg = new Image
+        {
+            Width = emojiSize,
+            Height = emojiSize,
+            Stretch = Stretch.Uniform,
+            Margin = margin,
+        };
+        RenderOptions.SetBitmapInterpolationMode(staticImg, BitmapInterpolationMode.HighQuality);
+        staticImg[ImageLoader.SourceProperty] = emojiUrl;
+        return staticImg;
+    }
+
+    private static void SetEmojiTooltip(Control emojiControl, Emoji emoji)
+    {
+        var tooltipContent = new StackPanel
+        {
+            Spacing = 4,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            MinWidth = 100
+        };
+
+        tooltipContent.Children.Add(new TextBlock
+        {
+            Text = $":{emoji.Name}:",
+            FontWeight = FontWeight.Bold,
+            HorizontalAlignment = HorizontalAlignment.Center
+        });
+
+        if (emoji.Parent.Type == EmojiParentType.Server)
+        {
+            if (GlobalCache.Servers.TryGetValue(emoji.Parent.Id, out var server))
+            {
+                var serverLine = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Spacing = 6,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                };
+
+                if (!string.IsNullOrEmpty(server.IconUrl))
+                {
+                    var icon = new Image
+                    {
+                        Width = 16,
+                        Height = 16,
+                        [ImageLoader.SourceProperty] = server.IconUrl
+                    };
+
+                    RenderOptions.SetBitmapInterpolationMode(icon, BitmapInterpolationMode.HighQuality);
+                    serverLine.Children.Add(new Border
+                    {
+                        CornerRadius = new CornerRadius(8),
+                        ClipToBounds = true,
+                        Child = icon
+                    });
+                }
+
+                serverLine.Children.Add(new TextBlock
+                {
+                    Text = $"From {server.Name}",
+                    FontSize = 11,
+                    Opacity = 0.8,
+                    VerticalAlignment = VerticalAlignment.Center
+                });
+                tooltipContent.Children.Add(serverLine);
+            }
+            else
+            {
+                tooltipContent.Children.Add(new TextBlock
+                {
+                    Text = "Private Server",
+                    FontSize = 11,
+                    Opacity = 0.6,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                });
+            }
+        }
+
+        ToolTip.SetTip(emojiControl, tooltipContent);
     }
 }

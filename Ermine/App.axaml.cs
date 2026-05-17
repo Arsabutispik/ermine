@@ -18,6 +18,8 @@ public class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
+    public static LruDiskCachedImageLoader ImageCache { get; private set; } = null!;
+        
     public override void OnFrameworkInitializationCompleted()
     {
         var cacheDirectory = Path.Combine(
@@ -25,7 +27,9 @@ public class App : Application
             "Ermine",
             "ImageCache");
 
-        ImageLoader.AsyncImageLoader = new LruDiskCachedImageLoader(cacheDirectory, maxBytes: 150L * 1024 * 1024);
+        var loader = new LruDiskCachedImageLoader(cacheDirectory, maxBytes: 150L * 1024 * 1024);
+        ImageCache = loader;
+        ImageLoader.AsyncImageLoader = loader;
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             desktop.MainWindow = new MainWindow
