@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/Arsabutispik/ermine/compare/v0.1.5...v0.2.0) (2026-05-17)
+
+
+### Features
+
+* unoptimized way of rendering gifs on emojis and attachments ([c71dc8c](https://github.com/Arsabutispik/ermine/commit/c71dc8c450170345bde9b7f661e449fd2eb70d07))
+
+
+### Bug Fixes
+
+* use thumbnails instead of requesting the full image ([db32467](https://github.com/Arsabutispik/ermine/commit/db32467efccfe1ad29ca6b8e93dec0f424020199))
+
 ## [0.1.5](https://github.com/Arsabutispik/ermine/compare/v0.1.4...v0.1.5) (2026-05-14)
 
 
